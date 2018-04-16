@@ -5,19 +5,23 @@ function getRandomInt(min, max) {
 }
 
 class Project {
-  constructor(paramString) {
+  constructor() {
     this.projectType = getRandomInt(0, 1) ? "web" : "mobile";
     this.projectDifficulty = getRandomInt(1, 3);
   }
 }
 
-function generateProjects() {
-  let projectsToday = [];
-  let amountNewProjects = getRandomInt(0, 4);
-  for (i = 0; i < amountNewProjects; i++) {
+let projectsToday=[];
+
+class Director {
+  generateProjects() {
+   let amountNewProjects = getRandomInt(0, 4);
+    for (let i = 0; i < amountNewProjects; i++) {
     projectsToday[i] = new Project();
   }
   return projectsToday;
 }
+}
 
-console.log(generateProjects());
+let director= new Director();
+console.log(director.generateProjects());
