@@ -1,36 +1,23 @@
 //generating today's objects
 
-function getRandomInt(min,max) {
-  return Math.floor(Math.random() * (max-min))+min;
-}
-
-function getProjectType(string){
-  let type;
-  if (+string[0]==1){ type= 'web';}else{ type = 'mobile';}
-  return type;
-}
-
-function getProjectDifficulty(string){
-let difficulty = Math.ceil(+string[1]/3);
-  return difficulty;
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max + 1 - min)) + min;
 }
 
 class Project {
-  constructor(paramString){
-  this.projectType=getProjectType(paramString);
-  this.projectDifficulty= getProjectDifficulty(paramString);}
+  constructor(paramString) {
+    this.projectType = getRandomInt(0, 1) ? "web" : "mobile";
+    this.projectDifficulty = getRandomInt(1, 3);
+  }
 }
 
-
-let amountNewProjects = getRandomInt(0,5);
-
-function generateProjects () {
-  let projectsToday=[];
-  for (i=0; i<amountNewProjects;i++)
-    {
-      projectsToday[i] = new Project ((getRandomInt(10,30)).toString());
-    }
+function generateProjects() {
+  let projectsToday = [];
+  let amountNewProjects = getRandomInt(0, 4);
+  for (i = 0; i < amountNewProjects; i++) {
+    projectsToday[i] = new Project();
+  }
   return projectsToday;
 }
 
-console.log(generateProjects ());
+console.log(generateProjects());
