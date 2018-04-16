@@ -2,14 +2,14 @@
 
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max + 1 - min)) + min;
-}
+};
 
 class Project {
   constructor() {
-    this.projectType = getRandomInt(0, 1) ? "web" : "mobile";
+    this.projectType = getRandomInt(0, 1) ? 'web' : 'mobile';
     this.projectDifficulty = getRandomInt(1, 3);
   }
-}
+};
 
 const director = {
   allProjects: [],
@@ -20,11 +20,25 @@ const director = {
     }
     return this.allProjects;
   },
+  giveProjects(){
+    webDepartment.projects = this.allProjects.filter(function(object){return object.projectType=='web';});
+    mobDepartment.projects = this.allProjects.filter(function(object){return object.projectType=='mobile';});
+  },
   hireDevs: function() {},
   fireDevs: function() {}
 };
 
+class Department {
+  constructor(){
+    this.projects=[];
+  }
+};
+
+let webDepartment = new Department();
+let mobDepartment = new Department();
+
 //1 day
 
 director.addProjects();
-console.log(director.allProjects);
+director.giveProjects();
+console.log(mobDepartment.projects);
