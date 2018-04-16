@@ -11,17 +11,20 @@ class Project {
   }
 }
 
-let projectsToday=[];
+const director = {
+  allProjects: [],
+  addProjects() {
+    const amount = getRandomInt(0, 4);
+    for (let i = 0; i < amount; i++) {
+      this.allProjects.push(new Project());
+    }
+    return this.allProjects;
+  },
+  hireDevs: function() {},
+  fireDevs: function() {}
+};
 
-class Director {
-  generateProjects() {
-   let amountNewProjects = getRandomInt(0, 4);
-    for (let i = 0; i < amountNewProjects; i++) {
-    projectsToday[i] = new Project();
-  }
-  return projectsToday;
-}
-}
+//1 day
 
-let director= new Director();
-console.log(director.generateProjects());
+director.addProjects();
+console.log(director.allProjects);
