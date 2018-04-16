@@ -24,10 +24,17 @@ const director = {
     webDepartment.projects = this.allProjects.filter(function(object){return object.projectType=='web';});
     mobDepartment.projects = this.allProjects.filter(function(object){return object.projectType=='mobile';});
   },
-  hire (department) {
+    
+  hire(){
+  function hireByDepartment (department) {
     for(let i=0; i<department.needDevelopers; i++){
    department.developers.push(new Developer());}
-  },
+  }
+  hireByDepartment (webDepartment);
+  hireByDepartment (mobDepartment);
+  hireByDepartment (qaDepartment);
+  },  
+  
   fire() {}
 };
 
@@ -35,15 +42,16 @@ class Department {
   constructor(){
     this.projects=[];
     this.developers=[];
-    this.freeDevelopers=this.developers.filter(function(object){return object.state=='free';});
     this.needDevelopers=0;
   }
-
+  freeDevelopers(){
+  return this.developers.filter(function(object){return object.state=='free';});  
+  }
 }
 
 let webDepartment = new Department();
-webDepartment.needDevelopers=5;
 let mobDepartment = new Department();
+let qaDepartment = new Department();
 
 class Developer {
   constructor(){
@@ -56,4 +64,4 @@ class Developer {
 director.addProjects();
 director.giveProjects();
 director.hire(webDepartment);
-console.log(webDepartment.developers);
+console.log(qaDepartment.freeDevelopers());
