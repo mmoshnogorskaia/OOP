@@ -81,9 +81,9 @@ class Department {
   }
   distributeProjects(){
    while(this.projects.length!=0){
-for(let i=0; i<this.developers.length; i++){
+   for(let i=0; i<this.developers.length; i++){
   if(this.developers[i].busyDuration==0){
-this.developers[i].busyDuration=this.projects[0].projectDifficulty;
+  this.developers[i].busyDuration=this.projects[0].projectDifficulty;
   break;
   }}
   this.projects.shift();
@@ -101,15 +101,21 @@ class Developer {
   }
 }
 
-//1 day
-director.addProjects();
-director.addProjects();
-director.addProjects();
-director.addProjects();
 
-director.giveProjects();
+//1 day
 director.hire();
 director.giveProjects();
-webDepartment.distributeProjects();
+webDepartment.distributeProjects(); //yesterday's
 
-console.log(webDepartment.freeDevelopers());
+director.addProjects();
+director.giveProjects();
+webDepartment.distributeProjects(); //today's
+//devs work on projects
+//testers work on projects
+//delete projects
+//fire
+
+
+
+
+console.log(webDepartment.projects);
