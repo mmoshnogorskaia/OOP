@@ -1,3 +1,5 @@
+//generating today's objects
+
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max + 1 - min)) + min;
 }
@@ -23,8 +25,18 @@ const director = {
     return this.allProjects;
   },
   giveProjects(){
-    webDepartment.projects = getMatchingObjects (this.allProjects, 'projectType', 'web');
-    mobDepartment.projects = getMatchingObjects (this.allProjects, 'projectType', 'mobile');
+    let projectsLeft=[];
+    let freeWebDevs=webDepartment.freeDevelopers().length;
+    let webProjects = getMatchingObjects (this.allProjects, 'projectType', 'web');
+    if (webProjects.length<=freeWebDevs){webDepartment.projects=webDepartment.projects.concat(webProjects);
+       }else{webDepartment.needDevelopers=webProjects.length-freeWebDevs;
+        webDepartment.projects=webDepartment.projects.concat(webProjects.slice(0,freeWebDevs));
+        projectsLeft=webProjects.slice(freeWebDevs+1);
+        this.allProjects=this.allProjects.concat(projectsLeft);
+       }
+    
+    let mobProjects = getMatchingObjects (this.allProjects, 'projectType', 'mobile');
+    this.allProjects=[];
   },
     
   hire(){
@@ -52,6 +64,7 @@ class Department {
 }
 
 let webDepartment = new Department();
+webDepartment.needDevelopers=6;
 let mobDepartment = new Department();
 let qaDepartment = new Department();
 
