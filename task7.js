@@ -68,8 +68,15 @@ const director = {
   },
 
   fire() {
-    function fireByDepartment(department){}
+    function fireByDepartment(department){
+      for(let i=0; i<department.developers.length;i++){if(department.developers[i].daysFree>3){department.developers.splice(i,1);}}
+    }
+    fireByDepartment(webDepartment);
+    fireByDepartment(mobDepartment);
+    fireByDepartment(qaDepartment);
+    
   }
+  
 };
 
 class Department {
@@ -85,22 +92,39 @@ class Department {
    while(this.projects.length!==0){
    for(let i=0; i<this.developers.length; i++){
   if(this.developers[i].busyDuration===0){
-  this.developers[i].busyDuration=this.projects[0].projectDifficulty;
+  this.developers[i].busyDuration=this.projects[0].projectDifficulty; this.developers[i].daysFree=0;
   break;
   }}
   this.projects.shift();
 }
+    
   }
-  workInProgress(){
-   for (let i=0; i<this.developers.length; i++){
-   this.developers[i].works();
-}
-  }
+  
+    
 }
 
 let webDepartment = new Department();
+
+webDepartment.workInProgress=function (){
+   for (let i=0; i<this.developers.length; i++){
+   this.developers[i].works();
+   if (this.developers[i].busyDuration===0){qaDepartment.projects++;}
+   }
+  };
+
+
 let mobDepartment = new Department();
+mobDepartment.workInProgress=function (){
+   for (let i=0; i<this.developers.length; i++){
+   this.developers[i].works();
+   if (this.developers[i].busyDuration===0){qaDepartment.projects++;}
+   }
+  };
+
 let qaDepartment = new Department();
+qaDepartment.projects=0;
+//mobDepartment.workInProgress=0;
+
 
 class Developer {
   constructor() {
@@ -109,7 +133,8 @@ class Developer {
   }
   works(){
     if (this.busyDuration===0){this.daysFree++;}
-    else{this.busyDuration--;}
+    else{this.busyDuration--; this.daysFree=0;}
+   // if (this.busyDuration===0){/*ready for tests*/}
   }
 }
 
@@ -129,7 +154,7 @@ webDepartment.workInProgress();
 mobDepartment.workInProgress();
 //testers work on projects
 //delete projects
-//fire
+director.fire();
 
 
 
