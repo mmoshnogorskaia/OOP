@@ -4,17 +4,6 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max + 1 - min)) + min;
 }
 
-function getMatchingObjects (array, property, value){
-  return array.filter(function(object){return object[property]==value;});
-}
-
-class Project {
-  //generating today's objects
-
-function getRandomInt(min, max) {
-  return Math.floor(Math.random() * (max + 1 - min)) + min;
-}
-
 function getMatchingObjects(array, property, value) {
   return array.filter(function(object) {
     return object[property] == value;
@@ -69,7 +58,7 @@ const director = {
 
   hire() {
     function hireByDepartment(department) {
-      for (let i = 0; i < department.needDevelopers; i++) {
+      for (let i = 1; i < department.needDevelopers; i++) {
         department.developers.push(new Developer());
       }
     }
@@ -88,18 +77,27 @@ class Department {
     this.needDevelopers = 0;
   }
   freeDevelopers() {
-    return getMatchingObjects(this.developers, "state", "free");
+    return getMatchingObjects(this.developers, "busyDuration", 0);
+  }
+  distributeProjects(){
+   while(this.projects.length!=0){
+for(let i=0; i<this.developers.length; i++){
+  if(this.developers[i].busyDuration==0){
+this.developers[i].busyDuration=this.projects[0].projectDifficulty;
+  break;
+  }}
+  this.projects.shift();
+}
   }
 }
 
 let webDepartment = new Department();
-webDepartment.needDevelopers=4;
 let mobDepartment = new Department();
 let qaDepartment = new Department();
 
 class Developer {
   constructor() {
-    this.state = "free";
+    this.busyDuration = 0;
   }
 }
 
@@ -108,10 +106,10 @@ director.addProjects();
 director.addProjects();
 director.addProjects();
 director.addProjects();
-director.addProjects();
-director.addProjects();
-director.addProjects();
-director.hire(webDepartment);
+
 director.giveProjects();
-//director.hire(webDepartment);
-console.log(webDepartment.projects);
+director.hire();
+director.giveProjects();
+webDepartment.distributeProjects();
+
+console.log(webDepartment.freeDevelopers());
