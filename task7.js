@@ -67,7 +67,9 @@ const director = {
     hireByDepartment(qaDepartment);
   },
 
-  fire() {}
+  fire() {
+    function fireByDepartment(department){}
+  }
 };
 
 class Department {
@@ -80,13 +82,18 @@ class Department {
     return getMatchingObjects(this.developers, "busyDuration", 0);
   }
   distributeProjects(){
-   while(this.projects.length!=0){
+   while(this.projects.length!==0){
    for(let i=0; i<this.developers.length; i++){
-  if(this.developers[i].busyDuration==0){
+  if(this.developers[i].busyDuration===0){
   this.developers[i].busyDuration=this.projects[0].projectDifficulty;
   break;
   }}
   this.projects.shift();
+}
+  }
+  workInProgress(){
+   for (let i=0; i<this.developers.length; i++){
+   this.developers[i].works();
 }
   }
 }
@@ -98,6 +105,11 @@ let qaDepartment = new Department();
 class Developer {
   constructor() {
     this.busyDuration = 0;
+    this.daysFree=0;
+  }
+  works(){
+    if (this.busyDuration===0){this.daysFree++;}
+    else{this.busyDuration--;}
   }
 }
 
@@ -106,11 +118,15 @@ class Developer {
 director.hire();
 director.giveProjects();
 webDepartment.distributeProjects(); //yesterday's
+mobDepartment.distributeProjects();
 
 director.addProjects();
 director.giveProjects();
 webDepartment.distributeProjects(); //today's
-//devs work on projects
+mobDepartment.distributeProjects();
+
+webDepartment.workInProgress();
+mobDepartment.workInProgress();
 //testers work on projects
 //delete projects
 //fire
