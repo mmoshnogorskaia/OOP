@@ -1,7 +1,9 @@
-//generating today's objects
-
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max + 1 - min)) + min;
+}
+
+function getMatchingObjects (array, property, value){
+  return array.filter(function(object){return object[property]==value;});
 }
 
 class Project {
@@ -21,8 +23,8 @@ const director = {
     return this.allProjects;
   },
   giveProjects(){
-    webDepartment.projects = this.allProjects.filter(function(object){return object.projectType=='web';});
-    mobDepartment.projects = this.allProjects.filter(function(object){return object.projectType=='mobile';});
+    webDepartment.projects = getMatchingObjects (this.allProjects, 'projectType', 'web');
+    mobDepartment.projects = getMatchingObjects (this.allProjects, 'projectType', 'mobile');
   },
     
   hire(){
@@ -45,7 +47,7 @@ class Department {
     this.needDevelopers=0;
   }
   freeDevelopers(){
-  return this.developers.filter(function(object){return object.state=='free';});  
+  return getMatchingObjects (this.developers, 'state', 'free');
   }
 }
 
@@ -64,4 +66,4 @@ class Developer {
 director.addProjects();
 director.giveProjects();
 director.hire(webDepartment);
-console.log(qaDepartment.freeDevelopers());
+console.log(webDepartment.projects);
