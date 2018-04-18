@@ -24,7 +24,7 @@ class Director {
     this.fired = 0;
   }
   addProjects() {
-    const amount = util.getRandomInt(0, 4);
+    let amount = util.getRandomInt(0, 4);
     for (let i = 0; i < amount; i++) {
       this.allProjects.push(new Project(util.getRandomInt(1, 3)));
     }
@@ -69,12 +69,12 @@ class Director {
 
   fire() {
     function fireByDepartment(department) {
-      for (let i = 0; i < department.developers.length; i++) {
-        if (department.developers[i].daysFree > 3) {
-          department.developers.splice(i, 1);
+      department.developers.forEach(function(dev, i, devs) {
+        if (dev.daysFree > 3) {
+          devs.splice(i, 1);
           director.fired++;
         }
-      }
+      });
     }
     fireByDepartment(webDepartment);
     fireByDepartment(mobDepartment);
@@ -99,19 +99,19 @@ class Department {
         if (this.developers[i].busyDuration === 0) {
           this.developers[i].busyDuration = this.projects[0].projectDifficulty;
           this.developers[i].daysFree = 0;
-          break;
+          break; //unable to make forEach with break
         }
       }
       this.projects.shift();
     }
   }
   workInProgress() {
-    for (let i = 0; i < this.developers.length; i++) {
-      this.developers[i].works();
-      if (this.developers[i].busyDuration === 0) {
+    this.developers.forEach(function(dev) {
+      dev.works();
+      if (dev.busyDuration === 0) {
         qaDepartment.projectsStack.push(new Project(1));
       }
-    }
+    });
   }
 }
 
@@ -139,17 +139,17 @@ qaDepartment.takeProjects = function() {
 };
 
 qaDepartment.workInProgress = function() {
-  for (let i = 0; i < this.developers.length; i++) {
-    this.developers[i].works();
-    if (this.developers[i].busyDuration === 0) {
+  this.developers.forEach(function(dev) {
+    dev.works();
+    if (dev.busyDuration === 0) {
       director.projectsDone++;
     }
-  }
+  });
 };
 
 class Developer {
   constructor() {
-    this.busyDuration = 0;
+    this.busyDuration = 0; //director.projectsDone++
     this.daysFree = 0;
   }
   works() {
