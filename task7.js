@@ -7,7 +7,7 @@ let util = {
     return object[property] == value;
   });
 }  
-}
+};
 
 
 
@@ -29,19 +29,9 @@ const director = {
     return this.allProjects;
   },
   giveProjects() {
-    let webProjects = util.getMatchingObjects(
-      this.allProjects,
-      "projectType",
-      "web"
-    );
-    let mobProjects = util.getMatchingObjects(
-      this.allProjects,
-      "projectType",
-      "mobile"
-    );
-    this.allProjects = [];
-    function giveProjectsToDepartment(department, p) {
+    function giveProjectsToDepartment(department, type) {
       let projectsLeft = [];
+      let p=util.getMatchingObjects(director.allProjects,"projectType",type);
       let freeDevs = department.freeDevelopers().length;
       if (p.length <= freeDevs) {
         department.projects = department.projects.concat(p);
@@ -54,8 +44,9 @@ const director = {
         director.allProjects = director.allProjects.concat(projectsLeft);
       }
     }
-    giveProjectsToDepartment(webDepartment, webProjects);
-    giveProjectsToDepartment(mobDepartment, mobProjects);
+    giveProjectsToDepartment(webDepartment, 'web');
+    giveProjectsToDepartment(mobDepartment, 'mobile');
+    this.allProjects = [];
   },
   hired: 0,
   hire() {
