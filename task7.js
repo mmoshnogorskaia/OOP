@@ -17,6 +17,7 @@ class Project {
   }
 }
 
+
 const director = {
   allProjects: [],
   addProjects() {
@@ -55,21 +56,24 @@ const director = {
     giveProjectsToDepartment(webDepartment, webProjects);
     giveProjectsToDepartment(mobDepartment, mobProjects);
   },
-
+  hired: 0,
   hire() {
     function hireByDepartment(department) {
       for (let i = 1; i < department.needDevelopers; i++) {
         department.developers.push(new Developer());
+        director.hired++;
       }
     }
     hireByDepartment(webDepartment);
     hireByDepartment(mobDepartment);
     hireByDepartment(qaDepartment);
   },
-
+  fired:0,
   fire() {
     function fireByDepartment(department){
-      for(let i=0; i<department.developers.length;i++){if(department.developers[i].daysFree>3){department.developers.splice(i,1);}}
+      for(let i=0; i<department.developers.length;i++){if(department.developers[i].daysFree>3)
+      {department.developers.splice(i,1);
+      director.fired++;}}
     }
     fireByDepartment(webDepartment);
     fireByDepartment(mobDepartment);
@@ -138,12 +142,10 @@ class Developer {
   }
 }
 
-
-//1 day
+let days=10;
+for (let k=0; k<days; k++){
 director.hire();
-director.giveProjects();
-webDepartment.distributeProjects(); //yesterday's
-mobDepartment.distributeProjects();
+director.giveProjects();//yesterday's
 
 director.addProjects();
 director.giveProjects();
@@ -155,8 +157,8 @@ mobDepartment.workInProgress();
 //testers work on projects
 //delete projects
 director.fire();
+}
 
 
 
-
-console.log(webDepartment.projects);
+console.log(director.fired);
