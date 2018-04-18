@@ -1,19 +1,20 @@
-//generating today's objects
-
-function getRandomInt(min, max) {
+let util = {
+  getRandomInt(min, max) {
   return Math.floor(Math.random() * (max + 1 - min)) + min;
-}
-
-function getMatchingObjects(array, property, value) {
+},
+ getMatchingObjects(array, property, value) {
   return array.filter(function(object) {
     return object[property] == value;
   });
+}  
 }
+
+
 
 class Project {
   constructor(projectDifficulty) {
-    this.projectType = getRandomInt(0, 1) ? "web" : "mobile";
-    this.projectDifficulty = projectDifficulty; //getRandomInt(1, 3);
+    this.projectType = util.getRandomInt(0, 1) ? "web" : "mobile";
+    this.projectDifficulty = projectDifficulty;
   }
 }
 
@@ -21,19 +22,19 @@ const director = {
   allProjects: [],
   projectsDone: 0,
   addProjects() {
-    const amount = getRandomInt(0, 4);
+    const amount = util.getRandomInt(0, 4);
     for (let i = 0; i < amount; i++) {
-      this.allProjects.push(new Project(getRandomInt(1, 3)));
+      this.allProjects.push(new Project(util.getRandomInt(1, 3)));
     }
     return this.allProjects;
   },
   giveProjects() {
-    let webProjects = getMatchingObjects(
+    let webProjects = util.getMatchingObjects(
       this.allProjects,
       "projectType",
       "web"
     );
-    let mobProjects = getMatchingObjects(
+    let mobProjects = util.getMatchingObjects(
       this.allProjects,
       "projectType",
       "mobile"
@@ -91,7 +92,7 @@ class Department {
     this.needDevelopers = 0;
   }
   freeDevelopers() {
-    return getMatchingObjects(this.developers, "busyDuration", 0);
+    return util.getMatchingObjects(this.developers, "busyDuration", 0);
   }
   distributeProjects() {
     while (this.projects.length !== 0) {
