@@ -28,7 +28,10 @@ class Project {
 class Director {
   constructor() {
     this.allProjects = [];
-    //this.departments = [];
+    this.departments = [];
+  }
+  addDepartment(type){
+    this.departments.push(new Department(type));
   }
   addProjects() {
     let amount = util.getRandomInt(0, 4);
@@ -91,13 +94,14 @@ class Director {
   }
 }
 
-let director = new Director();
+
 
 class Department {
-  constructor() {
+  constructor(type) {
     this.projects = [];
     this.developers = [];
     this.needDevelopers = 0;
+    this.type=type||'web';
   }
   freeDevelopers() {
     return util.getMatchingObjects(this.developers, "busyDuration", 0);
@@ -172,6 +176,11 @@ class Developer {
 }
 
 ////////////////////////////////////////////////
+let director = new Director();
+director.addDepartment('web');
+director.addDepartment('mob');
+director.addDepartment('qa');
+
 
 
 let days = 10;
@@ -192,4 +201,4 @@ for (let k = 0; k < days; k++) {
   director.fire();
 }
 
-console.log(statistics.hired+' '+statistics.fired+' '+statistics.projectsDone);
+console.log(director.departments);
