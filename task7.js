@@ -134,7 +134,7 @@ qaDepartment.takeProjects = function() {
       this.projectsStack.slice(0, freeDevs - 1)
     );
     projectsLeft = this.projectsStack.slice(freeDevs);
-    this.projects = this.projects.concat(projectsLeft);
+    this.projectsStack = this.projects.concat(projectsLeft);
   }
 };
 
@@ -175,6 +175,7 @@ for (let k = 0; k < days; k++) {
   webDepartment.workInProgress();
   mobDepartment.workInProgress();
   qaDepartment.takeProjects();
+  qaDepartment.distributeProjects();
   qaDepartment.workInProgress();
   director.fire();
 }
