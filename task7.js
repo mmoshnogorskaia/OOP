@@ -40,31 +40,11 @@ class Director {
       let difficulty=util.getRandomInt(1, 3);
       this.allProjects.push(new Project(difficulty,type));
     }
-    return this.allProjects;
   }
-  giveProjects() {
-    function giveProjectsToDepartment(department, type) {
-      let projectsLeft = [];
-      let p = util.getMatchingObjects(
-        director.allProjects,
-        "projectType",
-        type
-      );
-      let freeDevs = department.freeDevelopers().length;
-      if (p.length <= freeDevs) {
-        department.projects = department.projects.concat(p);
-      } else {
-        department.needDevelopers = p.length - freeDevs;
-        department.projects = department.projects.concat(
-          p.slice(0, freeDevs - 1)
-        );
-        projectsLeft = p.slice(freeDevs);
-        director.allProjects = director.allProjects.concat(projectsLeft);
-      }
-    }
-    giveProjectsToDepartment(webDepartment, "web");
-    giveProjectsToDepartment(mobDepartment, "mobile");
-    this.allProjects = [];
+  giveProjects() {                                                  //working on it
+    this.departments.forEach(function(department){
+      department.takeProjects();
+    });
   }
 
   hire() {
@@ -106,6 +86,22 @@ class Department {
   freeDevelopers() {
     return util.getMatchingObjects(this.developers, "busyDuration", 0);
   }
+  takeProjects(){
+    let projectsLeft = [];
+      let p = util.getMatchingObjects(director.allProjects,"projectType",this.type);
+      let freeDevs = department.freeDevelopers().length;
+      if (p.length <= freeDevs) {
+        department.projects = department.projects.concat(p);
+      } else {
+        department.needDevelopers = p.length - freeDevs;
+        department.projects = department.projects.concat(
+          p.slice(0, freeDevs - 1)
+        );
+        projectsLeft = p.slice(freeDevs);
+        director.allProjects = director.allProjects.concat(projectsLeft);
+  }
+  
+  
   distributeProjects() {
     while (this.projects.length !== 0) {
       for (let i = 0; i < this.developers.length; i++) {
