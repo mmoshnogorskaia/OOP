@@ -1,15 +1,13 @@
 let util = {
   getRandomInt(min, max) {
-  return Math.floor(Math.random() * (max + 1 - min)) + min;
-},
- getMatchingObjects(array, property, value) {
-  return array.filter(function(object) {
-    return object[property] == value;
-  });
-}  
+    return Math.floor(Math.random() * (max + 1 - min)) + min;
+  },
+  getMatchingObjects(array, property, value) {
+    return array.filter(function(object) {
+      return object[property] == value;
+    });
+  }
 };
-
-
 
 class Project {
   constructor(projectDifficulty) {
@@ -31,7 +29,11 @@ const director = {
   giveProjects() {
     function giveProjectsToDepartment(department, type) {
       let projectsLeft = [];
-      let p=util.getMatchingObjects(director.allProjects,"projectType",type);
+      let p = util.getMatchingObjects(
+        director.allProjects,
+        "projectType",
+        type
+      );
       let freeDevs = department.freeDevelopers().length;
       if (p.length <= freeDevs) {
         department.projects = department.projects.concat(p);
@@ -44,8 +46,8 @@ const director = {
         director.allProjects = director.allProjects.concat(projectsLeft);
       }
     }
-    giveProjectsToDepartment(webDepartment, 'web');
-    giveProjectsToDepartment(mobDepartment, 'mobile');
+    giveProjectsToDepartment(webDepartment, "web");
+    giveProjectsToDepartment(mobDepartment, "mobile");
     this.allProjects = [];
   },
   hired: 0,
@@ -97,31 +99,24 @@ class Department {
       this.projects.shift();
     }
   }
+  workInProgress() {
+    for (let i = 0; i < this.developers.length; i++) {
+      this.developers[i].works();
+      if (this.developers[i].busyDuration === 0) {
+        qaDepartment.projectsStack.push(new Project(1));
+      }
+    }
+  }
 }
 
 let webDepartment = new Department();
 
-webDepartment.workInProgress = function() {
-  for (let i = 0; i < this.developers.length; i++) {
-    this.developers[i].works();
-    if (this.developers[i].busyDuration === 0) {
-      qaDepartment.projectsStack.push(new Project(1));
-    }
-  }
-};
-
 let mobDepartment = new Department();
-mobDepartment.workInProgress = function() {
-  for (let i = 0; i < this.developers.length; i++) {
-    this.developers[i].works();
-    if (this.developers[i].busyDuration === 0) {
-      qaDepartment.projectsStack.push(new Project(1));
-    }
-  }
-};
 
 let qaDepartment = new Department(); //has its own stack of Projects and takeProjects method and modofied workInProgress
+
 qaDepartment.projectsStack = [];
+
 qaDepartment.takeProjects = function() {
   let projectsLeft = [];
   let freeDevs = this.freeDevelopers().length;
