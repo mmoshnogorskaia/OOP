@@ -19,23 +19,23 @@ let statistics = {
 }
 
 class Project {
-  constructor(projectDifficulty) {
-    this.projectType = util.getRandomInt(0, 1) ? "web" : "mobile";
-    this.projectDifficulty = projectDifficulty;
+  constructor(projectDifficulty,projectType) {
+    this.projectType = (projectType !== undefined) ? projectType : 'web';
+    this.projectDifficulty = (projectDifficulty !== undefined) ? projectDifficulty : 1;
   }
 }
 
 class Director {
   constructor() {
     this.allProjects = [];
-    this.projectsDone = 0;
-    this.hired = 0;
-    this.fired = 0;
+    //this.departments = [];
   }
   addProjects() {
     let amount = util.getRandomInt(0, 4);
     for (let i = 0; i < amount; i++) {
-      this.allProjects.push(new Project(util.getRandomInt(1, 3)));
+      let type=util.getRandomInt(0, 1) ? "web" : "mobile";
+      let difficulty=util.getRandomInt(1, 3);
+      this.allProjects.push(new Project(difficulty,type));
     }
     return this.allProjects;
   }
@@ -118,7 +118,7 @@ class Department {
     this.developers.forEach(function(dev) {
       dev.works();
       if (dev.busyDuration === 0) {
-        qaDepartment.projectsStack.push(new Project(1));
+        qaDepartment.projectsStack.push(new Project());
       }
     });
   }
@@ -170,6 +170,9 @@ class Developer {
     }
   }
 }
+
+////////////////////////////////////////////////
+
 
 let days = 10;
 for (let k = 0; k < days; k++) {
