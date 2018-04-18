@@ -16,16 +16,20 @@ class Project {
   }
 }
 
-const director = {
-  allProjects: [],
-  projectsDone: 0,
+class Director {
+  constructor() {
+    this.allProjects = [];
+    this.projectsDone = 0;
+    this.hired = 0;
+    this.fired = 0;
+  }
   addProjects() {
     const amount = util.getRandomInt(0, 4);
     for (let i = 0; i < amount; i++) {
       this.allProjects.push(new Project(util.getRandomInt(1, 3)));
     }
     return this.allProjects;
-  },
+  }
   giveProjects() {
     function giveProjectsToDepartment(department, type) {
       let projectsLeft = [];
@@ -49,8 +53,8 @@ const director = {
     giveProjectsToDepartment(webDepartment, "web");
     giveProjectsToDepartment(mobDepartment, "mobile");
     this.allProjects = [];
-  },
-  hired: 0,
+  }
+
   hire() {
     function hireByDepartment(department) {
       for (let i = 1; i < department.needDevelopers; i++) {
@@ -61,8 +65,8 @@ const director = {
     hireByDepartment(webDepartment);
     hireByDepartment(mobDepartment);
     hireByDepartment(qaDepartment);
-  },
-  fired: 0,
+  }
+
   fire() {
     function fireByDepartment(department) {
       for (let i = 0; i < department.developers.length; i++) {
@@ -76,7 +80,9 @@ const director = {
     fireByDepartment(mobDepartment);
     fireByDepartment(qaDepartment);
   }
-};
+}
+
+let director = new Director();
 
 class Department {
   constructor() {
