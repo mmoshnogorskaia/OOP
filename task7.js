@@ -9,6 +9,15 @@ let util = {
   }
 };
 
+let statistics = {
+  hired:0,
+  fired:0,
+  projectsDone:0,
+  increaseHired(){this.hired++;},
+  increaseFired(){this.fired++;},
+  increaseProjectsDone(){this.projectsDone++;}
+}
+
 class Project {
   constructor(projectDifficulty) {
     this.projectType = util.getRandomInt(0, 1) ? "web" : "mobile";
@@ -59,7 +68,7 @@ class Director {
     function hireByDepartment(department) {
       for (let i = 1; i < department.needDevelopers; i++) {
         department.developers.push(new Developer());
-        director.hired++;
+        statistics.increaseHired();
       }
     }
     hireByDepartment(webDepartment);
@@ -72,7 +81,7 @@ class Director {
       department.developers.forEach(function(dev, i, devs) {
         if (dev.daysFree > 3) {
           devs.splice(i, 1);
-          director.fired++;
+          statistics.increaseFired();
         }
       });
     }
@@ -142,7 +151,7 @@ qaDepartment.workInProgress = function() {
   this.developers.forEach(function(dev) {
     dev.works();
     if (dev.busyDuration === 0) {
-      director.projectsDone++;
+      statistics.increaseProjectsDone();
     }
   });
 };
@@ -180,6 +189,4 @@ for (let k = 0; k < days; k++) {
   director.fire();
 }
 
-console.log(
-  director.hired + " " + director.fired + " " + director.projectsDone
-);
+console.log(statistics.hired+' '+statistics.fired+' '+statistics.projectsDone);
