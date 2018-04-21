@@ -27,11 +27,16 @@ class Statistics {
 class Company {
   constructor() {
     this.director = null;
-    this.departments = [];
+    this.departments = null;
     this.statistics = null; //delete
+  }
+  addStatistics(){
+    this.statistics=new Statistics();
+    return this.statistics;
   }
   addDirector(name = "") {
     this.director = new Director(name, this);
+    return this.director;
   }
   addDepartments(departmentNames) {
     this.departments = departmentNames.map(name => {  //свернуть повторы в функцию
@@ -230,20 +235,22 @@ class MobDepartment extends Department {
     }
   }
   assignProjects() {
-    this.projects.forEach(project => {
-      //для каждого проекта
+    let emptyProjects=this.projects.filter(project=>!project.devs); //find free projects
+    emptyProjects.forEach(project => {  //для каждого проекта
       let freeDevs = this.devs.filter(dev => dev.free); //массив свободных разработчиков
       let amountOfDevs = 1; //выясняем, какому количеству разработчиков можно дать проект, по умолчанию над проектом работает 1 разработчик
-      if ((freeDevs - this.projects.length) / project.difficulty >= 1) {
+      let amountOfDevsReq=project.difficulty;  //для ясности кода
+      if ((freeDevs.length - this.projects.length) / amountOfDevsReq >= 1) {
         //а если разработчиков слишком много, то мы даем проект нескольким
-        amountOfDevs = project.Difficulty;
+        amountOfDevs = amountOfDevsReq;
       }
 
-      for (let i = 0; i < amountOfDevs; i++) {
+      for (let i = 0; i < amountOfDevs; i++) {        //количество разработчиков на 1 проект рассчитано, теперь раздаем проекты
         for (let j = 0; j < this.devs.length; j++) {
           //ищем одного свободного разработчика
           if (this.devs[j].free) {
-            project.assignDev(this.devs[j]); //и назначаем его проекту
+            project.assignDev(this.devs[i]); //назначаем проекту разработчика
+            this.dev[i].getProject(); //и у разработчика указываем, что он занят
             break;
           } // ищем еще разработчика, повтор
         }
@@ -258,7 +265,7 @@ class QaDepartment extends Department {
     this.typeOfProjects = QaProject;
   }
   hire() {
-    for (i = 0; i < this.needDevs; i++) {
+    for (i = 0; i < this.needDevs; i++) { //while
       this.devs.push(new QaDev());
     }
   }
@@ -295,18 +302,11 @@ class QaDev extends Dev {}
 Начальные условия: в фирме нет проектов и нет программистов.*/
 class Simulation {
   constructor(companyName, directorName, departmentsArray) {
-    this.company = companyName;
-    this.director = directorName;
-    this.departments = departmentsArray;
-  }
-  init() {
-    this.company = new Company();
-    this.stats = new Statistics(this.company);
-    /*В фирме есть директор*/
-    this.company.addDirector(this.director);
-    /*В фирме также есть 3 отдела:
-    веб отдел, мобильный отдел и отдел тестирования*/
-    this.company.addDepartments(this.departments);
+    this.company = new Company(companyName);
+    this.director = this.company.addDirector(directorName);
+    this.departments =  this.company.addDepartments(this.departments);
+    this.stats = this.company.addStatistics();
+  }  
   }
   run(days) {
     for (let i = 0; i < days; i++) {
