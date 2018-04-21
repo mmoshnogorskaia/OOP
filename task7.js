@@ -1,204 +1,329 @@
-let util = {
-  getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max + 1 - min)) + min;
-  },
-  getMatchingObjects(array, property, value) {
-    return array.filter(function(object) {
-      return object[property] == value;
-    });
-  }
-};
-
-let statistics = {
-  hired:0,
-  fired:0,
-  projectsDone:0,
-  increaseHired(){this.hired++;},
-  increaseFired(){this.fired++;},
-  increaseProjectsDone(){this.projectsDone++;}
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max + 1 - min)) + min;
 }
 
-class Project {
-  constructor(projectDifficulty,projectType) {
-    this.projectType = (projectType !== undefined) ? projectType : 'web';
-    this.projectDifficulty = (projectDifficulty !== undefined) ? projectDifficulty : 1;
+/*На выходе подробная статистика:
+Количество реализованных проектов,
+нанятых и уволенных программистов. */
+class Statistics {
+  constructor(company) {
+    this.company = company; //delete
+    this.hired = 0;
+    this.fired = 0;
+    this.projectsDone = 0;
+  }
+  incHired() {
+    this.hired++;
+  }
+  incLeaved() {
+    this.fired++;
+  }
+  incProjectsDone() {
+    this.projectsDone++;
   }
 }
-
-class Director {
+/*В фирме есть директор
+В фирме также есть отделы*/
+class Company {
   constructor() {
-    this.allProjects = [];
+    this.director = null;
     this.departments = [];
+    this.statistics = null; //delete
   }
-  addDepartment(type){
-    this.departments.push(new Department(type));
+  addDirector(name = "") {
+    this.director = new Director(name, this);
   }
-  addProjects() {
-    let amount = util.getRandomInt(0, 4);
-    for (let i = 0; i < amount; i++) {
-      let type=util.getRandomInt(0, 1) ? "web" : "mobile";
-      let difficulty=util.getRandomInt(1, 3);
-      this.allProjects.push(new Project(difficulty,type));
-    }
-    return this.allProjects;
+  addDepartments(departmentNames) {
+    this.departments = departmentNames.map(name => {  //свернуть повторы в функцию
+      switch (name) {
+        case "web":
+          return new WebDepartment();
+        case "mobile":
+          return new MobDepartment();
+        case "qa":
+          return new QaDepartment();
+        default:
+          return new Department(name);
+      }
+    });
   }
-  giveProjects() {
-    function giveProjectsToDepartment(department, type) {
-      let projectsLeft = [];
-      let p = util.getMatchingObjects(
-        director.allProjects,
-        "projectType",
-        type
-      );
-      let freeDevs = department.freeDevelopers().length;
-      if (p.length <= freeDevs) {
-        department.projects = department.projects.concat(p);
+  workflow() {
+    this.director.hire(); //утром директор нанимает сотрудников
+    this.director.getProjects();
+    this.director.tryToGiveProjects();
+    this.departments = this.departments.map(department => {
+      //все отделы работают над своими проектами
+      department.assignProjects();
+      department.work(); //в результате работы у основных отделов проект продвигается, а у тестировщиков-тестируется и удаляется
+    });
+    let generalDepartments = this.departments.filter(
+      department => !(department instanceof QaDepartment)
+    );
+    generalDepartments.map(department => department.sendForTests()); //основные отделы отправляют готовые проекты директору для тестирования на следующий день
+    this.director.fire(); //вечером директор увольняет сотрудников
+  }
+}
+/*Каждый день директор может получить новые проекты от клиента*/
+class Client {
+  constructor() {
+    this.projects = [];
+  }
+}
+/*Каждый день директор может получить от 0 до 4 новых проектов
+одного из 2 типов (Веб/мобильный),
+каждый из которых может быть трех уровней сложности.*/
+class UpworkClient extends Client {
+  makeProjects() {
+    let projectsAmount = getRandomInt(0, 4);
+    for (let i = 0; i < projectsAmount; i++) {
+      let projectType = getRandomInt(0, 1);
+      if (projectType) {
+        this.projects.push(new WebProject(getRandomInt(1, 3)));
       } else {
-        department.needDevelopers = p.length - freeDevs;
-        department.projects = department.projects.concat(
-          p.slice(0, freeDevs - 1)
-        );
-        projectsLeft = p.slice(freeDevs);
-        director.allProjects = director.allProjects.concat(projectsLeft);
+        this.projects.push(new MobProject(getRandomInt(1, 3)));
       }
     }
-    giveProjectsToDepartment(webDepartment, "web");
-    giveProjectsToDepartment(mobDepartment, "mobile");
-    this.allProjects = [];
+  }
+}
+/*проекты одного из 2 типов (Веб/мобильный),
+каждый из которых имеет уровень сложности*/
+class Project {
+  constructor(difficulty) {
+    this.difficulty = difficulty; //сложность соответствует необходимому количеству дней работы над проектом
+    this.done = false; //проект может иметь два состояния: готов и не готов
+    this.devs = [];
+  }
+  assignDev(dev) {
+    this.devs.push(dev);
   }
 
-  hire() {
-    function hireByDepartment(department) {
-      for (let i = 1; i < department.needDevelopers; i++) {
-        department.developers.push(new Developer());
-        statistics.increaseHired();
-      }
-    }
-    hireByDepartment(webDepartment);
-    hireByDepartment(mobDepartment);
-    hireByDepartment(qaDepartment);
+  work() {
+    this.difficulty--; //количество оставшихся дней работы уменьшается
+    if (!this.difficulty) {
+      dev.finishWork();
+      this.done = true;
+    } //если дней работы не осталось, проект готов
   }
-
-  fire() {
-    function fireByDepartment(department) {
-      department.developers.forEach(function(dev, i, devs) {
-        if (dev.daysFree > 3) {
-          devs.splice(i, 1);
-          statistics.increaseFired();
-        }
-      });
-    }
-    fireByDepartment(webDepartment);
-    fireByDepartment(mobDepartment);
-    fireByDepartment(qaDepartment);
+  prepareForTests() {
+    this.difficulty = 1;
+    this.done = false;
+    this.devs = [];
   }
 }
 
+/*веб программисты получают по 1 проекту на реализацию*/
+class WebProject extends Project {}
+/*мобильные могут работать на 1 проекте вдвоем или втроем
+если сложность проекта 2 или 3 соответственно.*/
+class MobProject extends Project {}
 
+class QaProject extends Project {} //проекты, с которыми работает QA отдел
 
-class Department {
-  constructor(type) {
+/*В фирме есть директор, который отвечает за набор сотрудников
+и получение новых проектов.
+Полученные проекты директор пытается передать в отделы учитывая их специализацию.
+оставшиеся проекты остаются у директора на следующий день.
+На следующий день директор нанимает необходимое количество программистов 
+*/
+class Director {
+  constructor(name, company) {
+    this.name = name;
+    this.company = company;
     this.projects = [];
-    this.developers = [];
-    this.needDevelopers = 0;
-    this.type=type||'web';
+    this.client = {};
   }
-  freeDevelopers() {
-    return util.getMatchingObjects(this.developers, "busyDuration", 0);
+  getProjects() {
+    this.client = new UpworkClient();
+    this.client.makesProjects();
+    this.projects = this.projects.concat(this.client.projects);
   }
-  distributeProjects() {
-    while (this.projects.length !== 0) {
-      for (let i = 0; i < this.developers.length; i++) {
-        if (this.developers[i].busyDuration === 0) {
-          this.developers[i].busyDuration = this.projects[0].projectDifficulty;
-          this.developers[i].daysFree = 0;
-          break; //unable to make forEach with break
+  tryToGiveProjects() {
+    this.company.departments.forEach(
+      department =>
+        (this.projects = this.projects.concat(
+          department.takeProjects(this.projects)
+        ))
+    ); //пытается отдать проекты в отделы, оставшиеся остаются на следующий день
+  }
+  hire() {
+    this.company.departments.forEach(department => department.hire()); //дает отделам команду нанять  map?
+  }
+  fire() {
+    this.company.departments.forEach(department => department.fire()); //дает отделам команду уволить map?
+  }
+}
+
+/*В фирме также есть 3 отдела
+В случае если в отделе недостаточно работников,
+то отдел принимает только проекты на реализацию которых есть ресурсы,
+а оставшиеся проекты остаются у директора на следующий день.*/
+class Department {
+  constructor(name = "") {
+    this.name = name;
+    this.projects = [];
+    this.projectsToTest = [];
+    this.needDevs = 0;
+    this.devs = [];
+  }
+  takeProjects(projects) {
+    let matchingProjects = projects.filter(
+      project => project instanceof this.typeOfProjects
+    ); //выделяем из массива всех проектов подходящие по типу
+    let freeDevs = this.devs.filter(dev => dev.free); //массив свободных разработчиков (ресурсы)
+    let extraProjects = matchingProjects.slice(freeDevs.length); //лишние проекты возвращаем обратно
+    this.needDevs = extraProjects.length;
+    this.projects = this.projects.concat(
+      matchingProjects.slice(0, freeDevs.length - 1)
+    ); //берем проекты, на реализацию которых есть ресурсы
+    return extraProjects;
+  }
+  assignProjects() {
+    this.projects.forEach(project => {
+      //для каждого проекта
+      for (let i = 0; i < this.devs.length; i++) {
+        //ищем одного свободного разработчика
+        if (this.devs[i].free) {
+          project.assignDev(this.devs[i]); //назначаем проекту разработчика
+          this.dev[i].getProject(); //и у разработчика указываем, что он занят
+          break;
         }
       }
-      this.projects.shift();
+    });
+  }
+  work() {
+    this.projects = this.projects.map(project => project.work());
+  } //проходит работа над всеми проектами
+  sendForTests() {
+    this.projectsToTests = this.projects.filter(project => project.done); //готовые проекты откладываем для тестирования
+    this.projects = this.projects.filter(project => !project.done); //а неготовые остаются
+  }
+  fire() {
+    this.devs.sort((dev1, dev2) => dev1.projectsDone - dev2.projectsDone); //сортируем разработчиков по возрастанию количества выполненных проектов
+    for (let i = 0; i < this.devs.length; i++) {
+      //ищем одного бездельника и удаляем
+      if (this.dev[i].freeDays > 3) {
+        this.devs.shift();
+        break;
+      }
     }
   }
-  workInProgress() {
-    this.developers.forEach(function(dev) {
-      dev.works();
-      if (dev.busyDuration === 0) {
-        qaDepartment.projectsStack.push(new Project());
+}
+/*есть 3 отдела: веб отдел, мобильный отдел и отделтестирования*/
+class WebDepartment extends Department {
+  constructor() {
+    this.typeOfProjects = WebProject;
+  }
+  hire() {
+    for (let i = 0; i < this.needDevs; i++) {
+      this.devs.push(new WebDev());
+    }
+  }
+}
+
+class MobDepartment extends Department {
+  constructor() {
+    this.typeOfProjects = MobProject;
+  }
+  hire() {
+    for (let i = 0; i < this.needDevs; i++) {
+      this.devs.push(new MobDev());
+    }
+  }
+  assignProjects() {
+    this.projects.forEach(project => {
+      //для каждого проекта
+      let freeDevs = this.devs.filter(dev => dev.free); //массив свободных разработчиков
+      let amountOfDevs = 1; //выясняем, какому количеству разработчиков можно дать проект, по умолчанию над проектом работает 1 разработчик
+      if ((freeDevs - this.projects.length) / project.difficulty >= 1) {
+        //а если разработчиков слишком много, то мы даем проект нескольким
+        amountOfDevs = project.Difficulty;
+      }
+
+      for (let i = 0; i < amountOfDevs; i++) {
+        for (let j = 0; j < this.devs.length; j++) {
+          //ищем одного свободного разработчика
+          if (this.devs[j].free) {
+            project.assignDev(this.devs[j]); //и назначаем его проекту
+            break;
+          } // ищем еще разработчика, повтор
+        }
       }
     });
   }
 }
 
-let webDepartment = new Department();
-
-let mobDepartment = new Department();
-
-let qaDepartment = new Department(); //has its own stack of Projects and takeProjects method and modofied workInProgress
-
-qaDepartment.projectsStack = [];
-
-qaDepartment.takeProjects = function() {
-  let projectsLeft = [];
-  let freeDevs = this.freeDevelopers().length;
-  if (this.projectsStack.length <= freeDevs) {
-    this.projects = this.projects.concat(this.projectsStack);
-  } else {
-    this.needDevelopers = this.projectsStack.length - freeDevs;
-    this.projects = this.projects.concat(
-      this.projectsStack.slice(0, freeDevs - 1)
-    );
-    projectsLeft = this.projectsStack.slice(freeDevs);
-    this.projectsStack = this.projects.concat(projectsLeft);
-  }
-};
-
-qaDepartment.workInProgress = function() {
-  this.developers.forEach(function(dev) {
-    dev.works();
-    if (dev.busyDuration === 0) {
-      statistics.increaseProjectsDone();
-    }
-  });
-};
-
-class Developer {
+class QaDepartment extends Department {
+  //работает с проектами projectsToTest
   constructor() {
-    this.busyDuration = 0; //director.projectsDone++
-    this.daysFree = 0;
+    this.typeOfProjects = QaProject;
   }
-  works() {
-    if (this.busyDuration === 0) {
-      this.daysFree++;
-    } else {
-      this.busyDuration--;
-      this.daysFree = 0;
+  hire() {
+    for (i = 0; i < this.needDevs; i++) {
+      this.devs.push(new QaDev());
     }
   }
 }
 
-////////////////////////////////////////////////
-let director = new Director();
-director.addDepartment('web');
-director.addDepartment('mob');
-director.addDepartment('qa');
+class Dev {
+  constructor() {
+    this.free = true;
+    this.projectsDone = 0;
+    this.freeDays = 0;
+    //this.department=department;
+  }
+  getProject() {
+    this.freeDays = 0;
+    this.free = false;
+  }
+  finishWork() {
+    this.projectsDone++;
+    this.free = true;
+  }
+  beLazy() {
+    this.freeDays++;
+  }
+}
+/*В фирме также есть 3 отдела в которых могут работать только соответственно
+веб разработчики, мобильные разработчики и QA специалисты*/
+class WebDev extends Dev {}
+class MobDev extends Dev {}
+class QaDev extends Dev {}
 
-
-
-let days = 10;
-for (let k = 0; k < days; k++) {
-  director.hire();
-  director.giveProjects(); //yesterday's
-
-  director.addProjects();
-  director.giveProjects(); //today's
-  webDepartment.distributeProjects();
-  mobDepartment.distributeProjects();
-
-  webDepartment.workInProgress();
-  mobDepartment.workInProgress();
-  qaDepartment.takeProjects();
-  qaDepartment.distributeProjects();
-  qaDepartment.workInProgress();
-  director.fire();
+/*На вход подается количество дней.
+На выходе подробная статистика:
+Количество реализованных проектов, нанятых и уволенных программистов.
+Начальные условия: в фирме нет проектов и нет программистов.*/
+class Simulation {
+  constructor(companyName, directorName, departmentsArray) {
+    this.company = companyName;
+    this.director = directorName;
+    this.departments = departmentsArray;
+  }
+  init() {
+    this.company = new Company();
+    this.stats = new Statistics(this.company);
+    /*В фирме есть директор*/
+    this.company.addDirector(this.director);
+    /*В фирме также есть 3 отдела:
+    веб отдел, мобильный отдел и отдел тестирования*/
+    this.company.addDepartments(this.departments);
+  }
+  run(days) {
+    for (let i = 0; i < days; i++) {
+      this.company.workflow();
+    }
+    console.log(
+      this.stats.hired + " " + this.stats.fired + "" + this.stats.projectsDone
+    );
+  }
 }
 
-console.log(director.departments);
+let simulation = new Simulation("creativeGuys", "vasiliy", [
+  "web",
+  "mob",
+  "qa"
+]);
+simulation.init();
+/*На вход подается количество дней.
+На выходе подробная статистика*/
+simulation.run(10);
