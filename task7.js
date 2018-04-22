@@ -303,7 +303,9 @@ class Simulation {
       this.company.workflow();
     }
     console.log(
-      this.stats.hired + " " + this.stats.fired + "" + this.stats.projectsDone
+      `hired: ${this.stats.hired}
+      fired: ${this.stats.fired}
+      projects done: ${this.stats.projectsDone}`
     );
   }
 }
