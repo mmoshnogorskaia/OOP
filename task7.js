@@ -155,30 +155,31 @@ class Department {
     this.needDevs = 0;
     this.devs = [];
   }
+  freeDevs(){
+    return this.devs.filter(dev => dev.free);//массив свободных разработчиков (ресурсы)
+  }
   takeProjects(projects) {
     let matchingProjects = projects.filter(
       project => project instanceof this.typeOfProjects
     ); //выделяем из массива всех проектов подходящие по типу
-    let freeDevs = this.devs.filter(dev => dev.free); //массив свободных разработчиков (ресурсы)
-    let extraProjects = matchingProjects.slice(freeDevs.length); //лишние проекты возвращаем обратно
+    let extraProjects = matchingProjects.slice(this.freeDevs().length); //лишние проекты возвращаем обратно
     this.needDevs = extraProjects.length;
     this.projects = this.projects.concat(
-      matchingProjects.slice(0, freeDevs.length - 1)
+      matchingProjects.slice(0, this.freeDevs().length - 1)
     ); //берем проекты, на реализацию которых есть ресурсы
     return extraProjects;
   }
   assignProjects() {
-    this.projects.forEach(project => {
-      //для каждого проекта
-      for (let i = 0; i < this.devs.length; i++) {
-        //ищем одного свободного разработчика
-        if (this.devs[i].free) {
-          project.assignDev(this.devs[i]); //назначаем проекту разработчика
-          this.dev[i].getProject(); //и у разработчика указываем, что он занят
-          break;
-        }
-      }
+    let freeProjects=this.projects.filter(project=>!project.devs); //разбиваем массив проектов на два
+    let projectsInWork=this.projects.filter(project=>project.devs);
+    let freeDevs=this.freeDevs();  //также разбиваем массив разработчиков на два
+    let busyDevs=this.devs.filter(dev => !dev.free);
+        freeProjects.forEach((project,i) => {
+      project[i].assignDev(freeDevs[i]); //назначаем проекту разработчика
+      freeDevs[i].getProject(); //и у разработчика указываем, что он занят     
     });
+    this.projects=projectsInWork.concat(freeProjects); //обратно собираем массив проектов
+    this.devs=busyDevs.concat(freeDevs);      //и массив разработчиков
   }
   work() {
     this.projects = this.projects.map(project => project.work());
