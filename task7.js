@@ -12,14 +12,14 @@ class Statistics {
     this.fired = 0;
     this.projectsDone = 0;
   }
-  incHired() {
-    this.hired++;
+  incHired(amount) {
+    this.hired+=amount;
   }
-  incLeaved() {
-    this.fired++;
+  setFired(currentAmount) {
+    this.fired=this.hired-currentAmount;
   }
-  incProjectsDone() {
-    this.projectsDone++;
+  incProjectsDone(currentAmount) {
+    this.projectsDone+=currentAmount;
   }
 }
 /*В фирме есть директор
@@ -44,19 +44,26 @@ class Company {
     this.departments = departmentNames.map(name => new departmentType[name]());
   }
   workflow() {
+    let needToHireToday=this.departments.reduce(((previous,current)=>previous.needDevs+current.needDevs),0);
+    this.statistics.incHired(needToHireToday);
     this.director.hire(); //утром директор нанимает сотрудников
     this.director.getProjects(this.client.makeProjects());
     this.director.tryToGiveProjects();
     this.departments = this.departments.map(department => {
       //все отделы работают над своими проектами
       department.assignProjects();
-      department.work(); //в результате работы у основных отделов проект продвигается, а у тестировщиков-тестируется и удаляется
-    });
-    let generalDepartments = this.departments.filter(
+      department.work(); //проходит 1 день работы над проектами
+          });
+    let generalDepartments = this.departments.filter(  //разделяем отделы на основные и QA отдел
       department => !(department instanceof QaDepartment)
     );
+    let qaDepartment=this.departments.filter(department=>department instanceof QaDepartment);
     generalDepartments.forEach(department => this.director.getProjects(department.sendForTests())); //основные отделы отправляют готовые проекты директору для тестирования на следующий день
+    let projectsDoneToday = qaDepartment.projects.filter(project=>project.done).length;
+    this.statistics.incProjectsDone(projectsDoneToday);
     this.director.fire(); //вечером директор увольняет сотрудников
+    let allDevs=this.departments.reduce((previousDep,currentDep)=>previousDep.devs.length+currentDep.devs.length); //считаем количество всех разработчиков в компании
+    this.statistics.setFired(alldevs); //считаем количество уволенных
   }
 }
 /*Каждый день директор может получить новые проекты от клиента*/
@@ -295,7 +302,7 @@ class Simulation {
   constructor(companyName, directorName, departmentsArray) {
     this.company = new Company(companyName);
     this.director = this.company.addDirector(directorName);
-    this.departments = this.company.addDepartments(this.departments);
+    this.departments = this.company.addDepartments(departmentsArray);
     this.stats = this.company.statistics;
   }
   run(days) {
@@ -315,7 +322,6 @@ let simulation = new Simulation("creativeGuys", "vasiliy", [
   "mob",
   "qa"
 ]);
-simulation.init();
 /*На вход подается количество дней.
 На выходе подробная статистика*/
 simulation.run(10);
