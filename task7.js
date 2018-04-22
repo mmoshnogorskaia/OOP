@@ -29,19 +29,19 @@ class Company {
     this.director = null;
     this.departments = null;
     this.statistics = new Statistics();
-    this.client=new Client();
+    this.client = new Client();
   }
   addDirector(name = "") {
     this.director = new Director(name, this);
     return this.director;
   }
   addDepartments(departmentNames) {
-    let departmentType={
-      'web': WebDepartment,
-      'mob': MobDepartment,
-      'qa': QaDepartment
+    let departmentType = {
+      web: WebDepartment,
+      mob: MobDepartment,
+      qa: QaDepartment
     };
-    this.departments = departmentNames.map(name => new departmentType[name]);
+    this.departments = departmentNames.map(name => new departmentType[name]());
   }
   workflow() {
     this.director.hire(); //утром директор нанимает сотрудников
@@ -55,7 +55,7 @@ class Company {
     let generalDepartments = this.departments.filter(
       department => !(department instanceof QaDepartment)
     );
-    generalDepartments.map(department => department.sendForTests()); //основные отделы отправляют готовые проекты директору для тестирования на следующий день
+    generalDepartments.forEach(department => this.director.getProjects(department.sendForTests())); //основные отделы отправляют готовые проекты директору для тестирования на следующий день
     this.director.fire(); //вечером директор увольняет сотрудников
   }
 }
@@ -155,8 +155,8 @@ class Department {
     this.needDevs = 0;
     this.devs = [];
   }
-  freeDevs(){
-    return this.devs.filter(dev => dev.free);//массив свободных разработчиков (ресурсы)
+  freeDevs() {
+    return this.devs.filter(dev => dev.free); //массив свободных разработчиков (ресурсы)
   }
   takeProjects(projects) {
     let matchingProjects = projects.filter(
@@ -170,23 +170,24 @@ class Department {
     return extraProjects;
   }
   assignProjects() {
-    let freeProjects=this.projects.filter(project=>!project.devs); //разбиваем массив проектов на два
-    let projectsInWork=this.projects.filter(project=>project.devs);
-    let freeDevs=this.freeDevs();  //также разбиваем массив разработчиков на два
-    let busyDevs=this.devs.filter(dev => !dev.free);
-        freeProjects.forEach((project,i) => {
+    let freeProjects = this.projects.filter(project => !project.devs); //разбиваем массив проектов на два
+    let projectsInWork = this.projects.filter(project => project.devs);
+    let freeDevs = this.freeDevs(); //также разбиваем массив разработчиков на два
+    let busyDevs = this.devs.filter(dev => !dev.free);
+    freeProjects.forEach((project, i) => {
       project[i].assignDev(freeDevs[i]); //назначаем проекту разработчика
-      freeDevs[i].getProject(); //и у разработчика указываем, что он занят     
+      freeDevs[i].getProject(); //и у разработчика указываем, что он занят
     });
-    this.projects=projectsInWork.concat(freeProjects); //обратно собираем массив проектов
-    this.devs=busyDevs.concat(freeDevs);      //и массив разработчиков
+    this.projects = projectsInWork.concat(freeProjects); //обратно собираем массив проектов
+    this.devs = busyDevs.concat(freeDevs); //и массив разработчиков
   }
   work() {
     this.projects = this.projects.map(project => project.work());
   } //проходит работа над всеми проектами
   sendForTests() {
-    this.projectsToTests = this.projects.filter(project => project.done); //готовые проекты откладываем для тестирования
+    this.projectsToTest = this.projects.filter(project => project.done); //готовые проекты откладываем для тестирования
     this.projects = this.projects.filter(project => !project.done); //а неготовые остаются
+    return this.projectsToTest;
   }
   fire() {
     this.devs.sort((dev1, dev2) => dev1.projectsDone - dev2.projectsDone); //сортируем разработчиков по возрастанию количества выполненных проектов
@@ -221,28 +222,30 @@ class MobDepartment extends Department {
     }
   }
   assignProjects() {
-    let emptyProjects=this.projects.filter(project=>!project.devs); //find free projects
-    let freeDevs = this.devs.filter(dev => dev.free); //массив свободных разработчиков
-    emptyProjects.forEach(project => {  //для каждого проекта
-      let freeDevs = this.devs.filter(dev => dev.free); //массив свободных разработчиков
-      let amountOfDevs = 1; //выясняем, какому количеству разработчиков можно дать проект, по умолчанию над проектом работает 1 разработчик
-      let amountOfDevsReq=project.difficulty;  //для ясности кода
+    let freeProjects = this.projects.filter(project => !project.devs); //разбиваем массив проектов на два
+    let projectsInWork = this.projects.filter(project => project.devs); 
+    let freeDevs = this.freeDevs();
+    let busyDevs = this.devs.filter(dev => !dev.free); //сохраняем массив занятых разработчиков, чтобы помещать туда тех, кто получил проект
+    let amountOfDevs = 1; //по умолчанию над проектом работает 1 разработчик
+    freeProjects.forEach((project) => {
+              //выясняем, какому количеству разработчиков можно дать проект 
+      let amountOfDevsReq = project.difficulty; //над проектом может работать количество разработчиков, соответствующее его сложности
       if ((freeDevs.length - this.projects.length) / amountOfDevsReq >= 1) {
         //а если разработчиков слишком много, то мы даем проект нескольким
         amountOfDevs = amountOfDevsReq;
-      }
-
-      for (let i = 0; i < amountOfDevs; i++) {        //количество разработчиков на 1 проект рассчитано, теперь раздаем проекты
-        for (let j = 0; j < this.devs.length; j++) {
-          //ищем одного свободного разработчика
-          if (this.devs[j].free) {
-            project.assignDev(this.devs[i]); //назначаем проекту разработчика
-            this.dev[i].getProject(); //и у разработчика указываем, что он занят
-            break;
-          } // ищем еще разработчика, повтор
+      }      
+        //количество разработчиков на 1 проект рассчитано, теперь раздаем проекты
+          while(amountOfDevs){
+            project.assignDev(freeDevs[0]); //назначаем проекту первого разработчика в массиве свободных
+            freeDevs[0].getProject(); //и у разработчика указываем, что он занят
+            busyDevs.push(freeDevs[0]); //переводим разработчика из массива свободных в массив занятых
+            freeDevs.shift();
+            amountOfDevs--;
+          }
         }
-      }
-    });
+    );
+    this.projects = projectsInWork.concat(freeProjects); //обратно собираем массив проектов
+    this.devs=busyDevs; //перекидываем всех разработчиков обратно в общий массив
   }
 }
 
@@ -252,7 +255,8 @@ class QaDepartment extends Department {
     this.typeOfProjects = QaProject;
   }
   hire() {
-    for (i = 0; i < this.needDevs; i++) { //while
+    for (i = 0; i < this.needDevs; i++) {
+      //while
       this.devs.push(new QaDev());
     }
   }
@@ -291,7 +295,7 @@ class Simulation {
   constructor(companyName, directorName, departmentsArray) {
     this.company = new Company(companyName);
     this.director = this.company.addDirector(directorName);
-    this.departments =  this.company.addDepartments(this.departments);
+    this.departments = this.company.addDepartments(this.departments);
     this.stats = this.company.statistics;
   }
   run(days) {
