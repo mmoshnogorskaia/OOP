@@ -28,33 +28,24 @@ class Company {
   constructor() {
     this.director = null;
     this.departments = null;
-    this.statistics = null; //delete
-  }
-  addStatistics(){
-    this.statistics=new Statistics();
-    return this.statistics;
+    this.statistics = new Statistics();
+    this.client=new Client();
   }
   addDirector(name = "") {
     this.director = new Director(name, this);
     return this.director;
   }
   addDepartments(departmentNames) {
-    this.departments = departmentNames.map(name => {  //свернуть повторы в функцию
-      switch (name) {
-        case "web":
-          return new WebDepartment();
-        case "mobile":
-          return new MobDepartment();
-        case "qa":
-          return new QaDepartment();
-        default:
-          return new Department(name);
-      }
-    });
+    let departmentType={
+      'web': WebDepartment,
+      'mob': MobDepartment,
+      'qa': QaDepartment
+    };
+    this.departments = departmentNames.map(name => new departmentType[name]);
   }
   workflow() {
     this.director.hire(); //утром директор нанимает сотрудников
-    this.director.getProjects();
+    this.director.getProjects(this.client.makeProjects());
     this.director.tryToGiveProjects();
     this.departments = this.departments.map(department => {
       //все отделы работают над своими проектами
@@ -73,11 +64,6 @@ class Client {
   constructor() {
     this.projects = [];
   }
-}
-/*Каждый день директор может получить от 0 до 4 новых проектов
-одного из 2 типов (Веб/мобильный),
-каждый из которых может быть трех уровней сложности.*/
-class UpworkClient extends Client {
   makeProjects() {
     let projectsAmount = getRandomInt(0, 4);
     for (let i = 0; i < projectsAmount; i++) {
@@ -88,8 +74,10 @@ class UpworkClient extends Client {
         this.projects.push(new MobProject(getRandomInt(1, 3)));
       }
     }
+    return this.projects;
   }
 }
+
 /*проекты одного из 2 типов (Веб/мобильный),
 каждый из которых имеет уровень сложности*/
 class Project {
@@ -122,7 +110,7 @@ class WebProject extends Project {}
 если сложность проекта 2 или 3 соответственно.*/
 class MobProject extends Project {}
 
-class QaProject extends Project {} //проекты, с которыми работает QA отдел
+class QaProject extends Project {} //проекты, с которыми будет работать QA отдел
 
 /*В фирме есть директор, который отвечает за набор сотрудников
 и получение новых проектов.
@@ -135,12 +123,9 @@ class Director {
     this.name = name;
     this.company = company;
     this.projects = [];
-    this.client = {};
   }
-  getProjects() {
-    this.client = new UpworkClient();
-    this.client.makesProjects();
-    this.projects = this.projects.concat(this.client.projects);
+  getProjects(newProjects) {
+    this.projects = this.projects.concat(newProjects);
   }
   tryToGiveProjects() {
     this.company.departments.forEach(
@@ -236,6 +221,7 @@ class MobDepartment extends Department {
   }
   assignProjects() {
     let emptyProjects=this.projects.filter(project=>!project.devs); //find free projects
+    let freeDevs = this.devs.filter(dev => dev.free); //массив свободных разработчиков
     emptyProjects.forEach(project => {  //для каждого проекта
       let freeDevs = this.devs.filter(dev => dev.free); //массив свободных разработчиков
       let amountOfDevs = 1; //выясняем, какому количеству разработчиков можно дать проект, по умолчанию над проектом работает 1 разработчик
@@ -305,8 +291,7 @@ class Simulation {
     this.company = new Company(companyName);
     this.director = this.company.addDirector(directorName);
     this.departments =  this.company.addDepartments(this.departments);
-    this.stats = this.company.addStatistics();
-  }  
+    this.stats = this.company.statistics;
   }
   run(days) {
     for (let i = 0; i < days; i++) {
