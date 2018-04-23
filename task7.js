@@ -73,7 +73,7 @@ class Client {
   }
   makeProjects() {
     this.projects = [];
-    let projectsAmount = getRandomInt(0, 4);
+    let projectsAmount = 4; //getRandomInt(0, 4)
     for (let i = 0; i < projectsAmount; i++) {
       let projectType = getRandomInt(0, 1);
       if (projectType) {
@@ -138,13 +138,7 @@ class Director {
   }
   tryToGiveProjects() {
     let projectsToGive=this.projects;
-    this.projects=[];
-    this.company.departments.forEach(
-      department =>
-        (this.projects = this.projects.concat(
-          department.takeProjects(projectsToGive)
-        ))
-    ); //пытается отдать проекты в отделы, оставшиеся остаются на следующий день
+    this.projects=this.company.departments.reduce((prevDep,currDep)=>currDep.takeProjects(prevDep),projectsToGive);
   }
   hire() {
     this.company.departments.forEach(department => department.hire()); //дает отделам команду нанять
@@ -193,22 +187,19 @@ class Department {
     this.devs = busyDevs.concat(freeDevs); //и массив разработчиков
   }
   work() {
-    this.projects = this.projects.map(project => project.work());
+    this.projects.forEach(project => project.work());
   } //проходит работа над всеми проектами
   sendForTests() {
     this.projectsToTest = this.projects.filter(project => project.done); //готовые проекты откладываем для тестирования
     this.projects = this.projects.filter(project => !project.done); //а неготовые остаются
     return this.projectsToTest;
   }
-  fire() {
-    this.devs.sort((dev1, dev2) => dev1.projectsDone - dev2.projectsDone); //сортируем разработчиков по возрастанию количества выполненных проектов
-    for (let i = 0; i < this.devs.length; i++) {
-      //ищем одного бездельника и удаляем
-      if (this.dev[i].freeDays > 3) {
-        this.devs.shift();
-        break;
-      }
-    }
+  fire() {    
+    let candidatesForFire = this.devs.filter(dev=>dev.freeDays>3); //разделяем массив на кандидатов на увольнение и остальных разработчиков
+    this.devs=this.devs.filter(dev=>dev.freeDays<=3);
+    candidatesForFire.sort((dev1, dev2) => dev1.projectsDone - dev2.projectsDone); //сортируем разработчиков по возрастанию количества выполненных проектов
+    candidatesForFire.shift();//удаляем первого (у него выполнено проектов меньше всех)
+    this.devs=this.devs.concat(candidatesForFire); //объединяем массив обратно, но уже без уволенного разработчика
   }
 }
 /*есть 3 отдела: веб отдел, мобильный отдел и отделтестирования*/
@@ -310,7 +301,6 @@ class Simulation {
     this.company = new Company(companyName);
     this.director = this.company.addDirector(directorName);
     this.departments = this.company.addDepartments(departmentsArray);
-    this.stats = this.company.statistics;
   }
   run(days) {
     while (days) {
@@ -332,4 +322,4 @@ let simulation = new Simulation("creativeGuys", "vasiliy", [
 ]);
 /*На вход подается количество дней.
 На выходе подробная статистика*/
-simulation.run(2);
+simulation.run(10);
