@@ -104,8 +104,8 @@ class Project {
   }
 
   work() {
-
     this.difficulty--; //количество оставшихся дней работы уменьшается
+    this.devs.forEach(dev=>dev.work());
     if (!this.difficulty) {
       this.devs.forEach(dev=>dev.finishWork());
       this.done = true;
@@ -183,15 +183,16 @@ class Department {
     return extraProjects;
   }
   assignProjects() {
-    let freeProjects = this.projects.filter(project => !project.devs); //создаем массив свободных проектов
+    let freeProjects = this.projects.filter(project => !project.devs.length); //создаем массив свободных проектов
     let freeDevs = this.freeDevs(); //также создаем массив свободных разработчиков
     freeProjects.forEach((project, i) => {
-      project[i].assignDev(freeDevs[i]); //назначаем проекту разработчика
+      freeProjects[i].assignDev(freeDevs[i]); //назначаем проекту разработчика
       freeDevs[i].getProject(); //и у разработчика указываем, что он занят
     });
   }
   work() {
     this.projects.forEach(project => project.work());
+    this.freeDevs().forEach(dev=>dev.beLazy());
   } //проходит работа над всеми проектами
   sendForTests() {
     this.projectsToTest = this.projects.filter(project => project.done); //готовые проекты откладываем для тестирования    
@@ -226,8 +227,9 @@ class MobDepartment extends Department {
     this.typeOfProjects = MobProject;
   }
   hire() {
-    for (let i = 0; i < this.needDevs; i++) {
+    while (this.needDevs) {
       this.devs.push(new MobDev());
+      this.needDevs--;
     }
   }
   assignProjects() {
@@ -281,6 +283,9 @@ class Dev {
     this.freeDays = 0;
     this.free = false;
   }
+  work(){
+    this.freeDays=0;
+  }
   finishWork() {
     this.projectsDone++;
     this.free = true;
@@ -326,4 +331,4 @@ let simulation = new Simulation("creativeGuys", "vasiliy", [
 ]);
 /*На вход подается количество дней.
 На выходе подробная статистика*/
-simulation.run(10);
+simulation.run(100);
