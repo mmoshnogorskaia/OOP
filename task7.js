@@ -49,7 +49,7 @@ class Company {
     this.director.hire(); //утром директор нанимает сотрудников
     this.director.getProjects(this.client.makeProjects());
     this.director.tryToGiveProjects();
-    this.departments = this.departments.map(department => {
+    this.departments.forEach(department => {
       //все отделы работают над своими проектами
       department.assignProjects();
       department.work(); //проходит 1 день работы над проектами
@@ -57,13 +57,13 @@ class Company {
     let generalDepartments = this.departments.filter(  //разделяем отделы на основные и QA отдел
       department => !(department instanceof QaDepartment)
     );
-    let qaDepartment=this.departments.filter(department=>department instanceof QaDepartment);
+    let qaDepartment=this.departments.filter(department=>department instanceof QaDepartment)[0];
     generalDepartments.forEach(department => this.director.getProjects(department.sendForTests())); //основные отделы отправляют готовые проекты директору для тестирования на следующий день
     let projectsDoneToday = qaDepartment.projects.filter(project=>project.done).length;
     this.statistics.incProjectsDone(projectsDoneToday);
     this.director.fire(); //вечером директор увольняет сотрудников
-    let allDevs=this.departments.reduce((previousDep,currentDep)=>previousDep.devs.length+currentDep.devs.length); //считаем количество всех разработчиков в компании
-    this.statistics.setFired(alldevs); //считаем количество уволенных
+    let allDevs=this.departments.reduce((previous,current)=>previous+current.devs.length,0); //считаем количество всех разработчиков в компании
+    this.statistics.setFired(allDevs); //считаем количество уволенных
   }
 }
 /*Каждый день директор может получить новые проекты от клиента*/
@@ -72,6 +72,7 @@ class Client {
     this.projects = [];
   }
   makeProjects() {
+    this.projects = [];
     let projectsAmount = getRandomInt(0, 4);
     for (let i = 0; i < projectsAmount; i++) {
       let projectType = getRandomInt(0, 1);
@@ -98,9 +99,10 @@ class Project {
   }
 
   work() {
+
     this.difficulty--; //количество оставшихся дней работы уменьшается
     if (!this.difficulty) {
-      dev.finishWork();
+      this.devs.forEach(dev=>dev.finishWork());
       this.done = true;
     } //если дней работы не осталось, проект готов
   }
@@ -145,10 +147,10 @@ class Director {
     ); //пытается отдать проекты в отделы, оставшиеся остаются на следующий день
   }
   hire() {
-    this.company.departments.forEach(department => department.hire()); //дает отделам команду нанять  map?
+    this.company.departments.forEach(department => department.hire()); //дает отделам команду нанять
   }
   fire() {
-    this.company.departments.forEach(department => department.fire()); //дает отделам команду уволить map?
+    this.company.departments.forEach(department => department.fire()); //дает отделам команду уволить
   }
 }
 
@@ -170,7 +172,8 @@ class Department {
     let matchingProjects = projects.filter(
       project => project instanceof this.typeOfProjects
     ); //выделяем из массива всех проектов подходящие по типу
-    let extraProjects = matchingProjects.slice(this.freeDevs().length); //лишние проекты возвращаем обратно
+    let unmatchingProjects=projects.filter(project => !(project instanceof this.typeOfProjects));//оставшиеся проекты сохранаем на потом
+    let extraProjects = unmatchingProjects.concat(matchingProjects.slice(this.freeDevs().length)); //лишние проекты возвращаем обратно
     this.needDevs = extraProjects.length;
     this.projects = this.projects.concat(
       matchingProjects.slice(0, this.freeDevs().length)
@@ -315,9 +318,9 @@ class Simulation {
       days--;
     }
     console.log(
-      `hired: ${this.stats.hired}
-      fired: ${this.stats.fired}
-      projects done: ${this.stats.projectsDone}`
+      `hired: ${this.company.statistics.hired}
+      fired: ${this.company.statistics.fired}
+      projects done: ${this.company.statistics.projectsDone}`
     );
   }
 }
@@ -329,4 +332,4 @@ let simulation = new Simulation("creativeGuys", "vasiliy", [
 ]);
 /*На вход подается количество дней.
 На выходе подробная статистика*/
-simulation.run(10);
+simulation.run(2);
