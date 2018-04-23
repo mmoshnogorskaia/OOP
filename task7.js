@@ -174,7 +174,7 @@ class Department {
     ); //выделяем из массива всех проектов подходящие по типу
     let unmatchingProjects=projects.filter(project => !(project instanceof this.typeOfProjects));//оставшиеся проекты сохранаем на потом
     let extraProjects = unmatchingProjects.concat(matchingProjects.slice(this.freeDevs().length)); //лишние проекты возвращаем обратно
-    this.needDevs = extraProjects.length;
+    this.needDevs = matchingProjects.length>this.freeDevs().length? matchingProjects.length-this.freeDevs().length :0 ;
     this.projects = this.projects.concat(
       matchingProjects.slice(0, this.freeDevs().length)
     ); //берем проекты, на реализацию которых есть ресурсы
