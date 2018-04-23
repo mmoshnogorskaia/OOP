@@ -6,8 +6,7 @@ function getRandomInt(min, max) {
 Количество реализованных проектов,
 нанятых и уволенных программистов. */
 class Statistics {
-  constructor(company) {
-    this.company = company; //delete
+  constructor() {
     this.hired = 0;
     this.fired = 0;
     this.projectsDone = 0;
@@ -42,9 +41,10 @@ class Company {
       qa: QaDepartment
     };
     this.departments = departmentNames.map(name => new departmentType[name]());
+     return this.departments;
   }
   workflow() {
-    let needToHireToday=this.departments.reduce(((previous,current)=>previous.needDevs+current.needDevs),0);
+    let needToHireToday=this.departments.reduce((previous,current)=>previous+current.needDevs,0);
     this.statistics.incHired(needToHireToday);
     this.director.hire(); //утром директор нанимает сотрудников
     this.director.getProjects(this.client.makeProjects());
@@ -135,10 +135,12 @@ class Director {
     this.projects = this.projects.concat(newProjects);
   }
   tryToGiveProjects() {
+    let projectsToGive=this.projects;
+    this.projects=[];
     this.company.departments.forEach(
       department =>
         (this.projects = this.projects.concat(
-          department.takeProjects(this.projects)
+          department.takeProjects(projectsToGive)
         ))
     ); //пытается отдать проекты в отделы, оставшиеся остаются на следующий день
   }
@@ -155,8 +157,7 @@ class Director {
 то отдел принимает только проекты на реализацию которых есть ресурсы,
 а оставшиеся проекты остаются у директора на следующий день.*/
 class Department {
-  constructor(name = "") {
-    this.name = name;
+  constructor() {
     this.projects = [];
     this.projectsToTest = [];
     this.needDevs = 0;
@@ -172,7 +173,7 @@ class Department {
     let extraProjects = matchingProjects.slice(this.freeDevs().length); //лишние проекты возвращаем обратно
     this.needDevs = extraProjects.length;
     this.projects = this.projects.concat(
-      matchingProjects.slice(0, this.freeDevs().length - 1)
+      matchingProjects.slice(0, this.freeDevs().length)
     ); //берем проекты, на реализацию которых есть ресурсы
     return extraProjects;
   }
@@ -210,6 +211,7 @@ class Department {
 /*есть 3 отдела: веб отдел, мобильный отдел и отделтестирования*/
 class WebDepartment extends Department {
   constructor() {
+    super();
     this.typeOfProjects = WebProject;
   }
   hire() {
@@ -221,6 +223,7 @@ class WebDepartment extends Department {
 
 class MobDepartment extends Department {
   constructor() {
+    super();
     this.typeOfProjects = MobProject;
   }
   hire() {
@@ -259,10 +262,11 @@ class MobDepartment extends Department {
 class QaDepartment extends Department {
   //работает с проектами projectsToTest
   constructor() {
+    super();
     this.typeOfProjects = QaProject;
   }
   hire() {
-    for (i = 0; i < this.needDevs; i++) {
+    for (let i = 0; i < this.needDevs; i++) {
       //while
       this.devs.push(new QaDev());
     }
@@ -306,8 +310,9 @@ class Simulation {
     this.stats = this.company.statistics;
   }
   run(days) {
-    for (let i = 0; i < days; i++) {
-      this.company.workflow();
+    while (days) {
+      this.company.workflow()
+      days--;
     }
     console.log(
       `hired: ${this.stats.hired}
