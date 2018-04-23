@@ -14,7 +14,7 @@ class Statistics {
   incHired(amount) {
     this.hired+=amount;
   }
-  setFired(currentAmount) {
+  calcFired(currentAmount) {
     this.fired=this.hired-currentAmount;
   }
   incProjectsDone(currentAmount) {
@@ -54,19 +54,20 @@ class Company {
       department.assignProjects();
       department.work(); //проходит 1 день работы над проектами
           });
-    let generalDepartments = this.departments.filter(  //разделяем отделы на основные и QA отдел
+    
+    
+    let generalDepartments = this.departments.filter(  //берем основные отделы
       department => !(department instanceof QaDepartment)
     );
-    let qaDepartment=this.departments.filter(department=>department instanceof QaDepartment)[0];
     generalDepartments.forEach(department => this.director.getProjects(department.sendForTests())); //основные отделы копируют готовые проекты директору для тестирования на следующий день
+    let qaDepartment=this.departments.filter(department=>department instanceof QaDepartment)[0]; //берем QA отдел
     let projectsDoneToday = qaDepartment.projects.filter(project=>project.done); //ищем выполненные проекты в Qa отделе
-    this.statistics.incProjectsDone(projectsDoneToday.length);
-    this.departments=generalDepartments.concat(qaDepartment); //соединяем отделы обратно
+    this.statistics.incProjectsDone(projectsDoneToday.length); //увеличиваем количество выполненных проектов в статистике
     this.departments.forEach(department=>
       department.projects=department.projects.filter(project=>!project.done)); //удаляем из всех отделов готовые проекты
      this.director.fire(); //вечером директор увольняет сотрудников
     let allDevs=this.departments.reduce((previous,current)=>previous+current.devs.length,0); //считаем количество всех разработчиков в компании
-    this.statistics.setFired(allDevs); //считаем количество уволенных
+    this.statistics.calcFired(allDevs); //считаем количество уволенных
   }
 }
 /*Каждый день директор может получить новые проекты от клиента*/
@@ -77,13 +78,14 @@ class Client {
   makeProjects() {
     this.projects = [];
     let projectsAmount = 4; //getRandomInt(0, 4)
-    for (let i = 0; i < projectsAmount; i++) {
+    while (projectsAmount) {
       let projectType = getRandomInt(0, 1);
       if (projectType) {
         this.projects.push(new WebProject(getRandomInt(1, 3)));
       } else {
         this.projects.push(new MobProject(getRandomInt(1, 3)));
       }
+      projectsAmount--;
     }
     return this.projects;
   }
@@ -109,10 +111,8 @@ class Project {
       this.done = true;
     } //если дней работы не осталось, проект готов
   }
-  prepareForTests() {
-    this.difficulty = 1;
-    this.done = false;
-    this.devs = [];
+  transformForTests() {
+     return new QaProject();
   }
 }
 
@@ -122,7 +122,12 @@ class WebProject extends Project {}
 если сложность проекта 2 или 3 соответственно.*/
 class MobProject extends Project {}
 
-class QaProject extends Project {} //проекты, с которыми будет работать QA отдел
+class QaProject extends Project {
+  constructor(){
+    super();
+    this.difficulty = 1;
+  }
+} //проекты, с которыми будет работать QA отдел
 
 /*В фирме есть директор, который отвечает за набор сотрудников
 и получение новых проектов.
@@ -178,23 +183,20 @@ class Department {
     return extraProjects;
   }
   assignProjects() {
-    let freeProjects = this.projects.filter(project => !project.devs); //разбиваем массив проектов на два
-    let projectsInWork = this.projects.filter(project => project.devs);
-    let freeDevs = this.freeDevs(); //также разбиваем массив разработчиков на два
-    let busyDevs = this.devs.filter(dev => !dev.free);
+    let freeProjects = this.projects.filter(project => !project.devs); //создаем массив свободных проектов
+    let freeDevs = this.freeDevs(); //также создаем массив свободных разработчиков
     freeProjects.forEach((project, i) => {
       project[i].assignDev(freeDevs[i]); //назначаем проекту разработчика
       freeDevs[i].getProject(); //и у разработчика указываем, что он занят
     });
-    this.projects = projectsInWork.concat(freeProjects); //обратно собираем массив проектов
-    this.devs = busyDevs.concat(freeDevs); //и массив разработчиков
   }
   work() {
     this.projects.forEach(project => project.work());
   } //проходит работа над всеми проектами
   sendForTests() {
-    this.projectsToTest = this.projects.filter(project => project.done); //готовые проекты откладываем для тестирования
+    this.projectsToTest = this.projects.filter(project => project.done); //готовые проекты откладываем для тестирования    
     this.projects = this.projects.filter(project => !project.done); //а неготовые остаются
+    this.projectsToTest=this.projectsToTest.map(project=>project.transformForTests());
     return this.projectsToTest;
   }
   fire() {    
@@ -229,8 +231,7 @@ class MobDepartment extends Department {
     }
   }
   assignProjects() {
-    let freeProjects = this.projects.filter(project => !project.devs); //разбиваем массив проектов на два
-    let projectsInWork = this.projects.filter(project => project.devs); 
+    let freeProjects = this.projects.filter(project => !project.devs); 
     let freeDevs = this.freeDevs();
     let busyDevs = this.devs.filter(dev => !dev.free); //сохраняем массив занятых разработчиков, чтобы помещать туда тех, кто получил проект
     let amountOfDevs = 1; //по умолчанию над проектом работает 1 разработчик
@@ -251,7 +252,6 @@ class MobDepartment extends Department {
           }
         }
     );
-    this.projects = projectsInWork.concat(freeProjects); //обратно собираем массив проектов
     this.devs=busyDevs; //перекидываем всех разработчиков обратно в общий массив
   }
 }
@@ -307,11 +307,12 @@ class Simulation {
   }
   run(days) {
     while (days) {
-      this.company.workflow()
+      this.company.workflow();
       days--;
     }
     console.log(
-      `hired: ${this.company.statistics.hired}
+      `
+      hired: ${this.company.statistics.hired}
       fired: ${this.company.statistics.fired}
       projects done: ${this.company.statistics.projectsDone}`
     );
