@@ -58,10 +58,13 @@ class Company {
       department => !(department instanceof QaDepartment)
     );
     let qaDepartment=this.departments.filter(department=>department instanceof QaDepartment)[0];
-    generalDepartments.forEach(department => this.director.getProjects(department.sendForTests())); //основные отделы отправляют готовые проекты директору для тестирования на следующий день
-    let projectsDoneToday = qaDepartment.projects.filter(project=>project.done).length;
-    this.statistics.incProjectsDone(projectsDoneToday);
-    this.director.fire(); //вечером директор увольняет сотрудников
+    generalDepartments.forEach(department => this.director.getProjects(department.sendForTests())); //основные отделы копируют готовые проекты директору для тестирования на следующий день
+    let projectsDoneToday = qaDepartment.projects.filter(project=>project.done); //ищем выполненные проекты в Qa отделе
+    this.statistics.incProjectsDone(projectsDoneToday.length);
+    this.departments=generalDepartments.concat(qaDepartment); //соединяем отделы обратно
+    this.departments.forEach(department=>
+      department.projects=department.projects.filter(project=>!project.done)); //удаляем из всех отделов готовые проекты
+     this.director.fire(); //вечером директор увольняет сотрудников
     let allDevs=this.departments.reduce((previous,current)=>previous+current.devs.length,0); //считаем количество всех разработчиков в компании
     this.statistics.setFired(allDevs); //считаем количество уволенных
   }
