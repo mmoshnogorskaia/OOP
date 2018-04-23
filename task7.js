@@ -63,6 +63,7 @@ class Company {
     generalDepartments.forEach(department =>
       this.director.getProjects(department.sendForTests())
     ); //основные отделы копируют готовые проекты директору для тестирования на следующий день
+
     let qaDepartment = this.departments.filter(
       department => department instanceof QaDepartment
     )[0];
@@ -196,7 +197,7 @@ class Department {
     let freeProjects = this.projects.filter(project => !project.devs.length);
     let freeDevs = this.freeDevs();
     freeProjects.forEach((project, i) => {
-      freeProjects[i].assignDev(freeDevs[i]);
+      project.assignDev(freeDevs[i]);
       freeDevs[i].getProject();
     });
   }
