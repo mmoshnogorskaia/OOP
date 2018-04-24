@@ -88,14 +88,13 @@ class Client {
   makeProjects() {
     this.projects = [];
     let projectsAmount = getRandomInt(0, 4);
-    while (projectsAmount) {
+    while (projectsAmount--) {
       let projectType = getRandomInt(0, 1);
       if (projectType) {
         this.projects.push(new WebProject(getRandomInt(1, 3)));
       } else {
         this.projects.push(new MobProject(getRandomInt(1, 3)));
       }
-      projectsAmount--;
     }
     return this.projects;
   }
@@ -243,10 +242,8 @@ class MobDepartment extends Department {
     this.typeOfProjects = MobProject;
   }
   hire() {
-    while (this.needDevs) {
+    while (this.needDevs--) {
       this.devs.push(new MobDev());
-      this.needDevs--;
-    }
   }
   assignProjects() {
     let freeProjects = this.projects.filter(project => !project.devs);
@@ -260,12 +257,11 @@ class MobDepartment extends Department {
         //если разработчиков много, то даем проект нескольким
         amountOfDevs = amountOfDevsReq;
       }
-      while (amountOfDevs) {
+      while (amountOfDevs--) {
         let firstDev=freeDevs.shift();
         project.assignDev(firstDev); //назначаем проекту первого разработчика в массиве свободных
         firstDev.getProject(); //и у разработчика указываем, что он занят
         busyDevs.push(firstDev); //переводим разработчика из массива свободных в массив занятых
-        amountOfDevs--;
       }
     });
     this.devs = busyDevs; //перекидываем всех разработчиков обратно в общий массив
@@ -314,21 +310,24 @@ class QaDev extends Dev {}
 class Simulation {
   constructor(companyName, directorName, departmentsArray) {
     this.company = new Company(companyName);
-    this.director = this.company.addDirector(directorName);
-    this.departments = this.company.addDepartments(departmentsArray);
+    this.company.addDirector(directorName);
+    this.company.addDepartments(departmentsArray);
+    this.statistics=this.company.statistics;
   }
   run(days) {
-    while (days) {
+    while (days--) {
       this.company.startDay();
       this.company.workInProcess();
       this.company.endDay();
-      days--;
-    }
+      }
+    
+  }
+  showStats(){
     console.log(
       `
-      hired: ${this.company.statistics.hired}
-      fired: ${this.company.statistics.fired}
-      projects done: ${this.company.statistics.projectsDone}`
+      hired: ${this.statistics.hired}
+      fired: ${this.statistics.fired}
+      projects done: ${this.company.projectsDone}`
     );
   }
 }
@@ -341,3 +340,4 @@ let simulation = new Simulation("creativeGuys", "vasiliy", [
 /*На вход подается количество дней.
 На выходе подробная статистика*/
 simulation.run(100);
+simulation.showStats();
