@@ -71,12 +71,7 @@ class Company {
       project => project.done
     );
     this.statistics.incProjectsDone(projectsDoneToday.length);
-    this.departments.forEach(
-      department =>
-        (department.projects = department.projects.filter(
-          project => !project.done
-        ))
-    ); //удаляем из всех отделов готовые проекты
+    this.departments.forEach(department => department.deleteProjects());
     this.director.fire();
     let allDevs = this.departments.reduce(
       (previous, current) => previous + current.devs.length,
@@ -108,21 +103,23 @@ class Client {
 
 class Project {
   constructor(difficulty) {
-    this.difficulty = difficulty; //сложность=количество дней работы над проектом
+    this.difficulty = difficulty;
+    this.daysLeft = difficulty; //сложность=количество дней работы над проектом
     this.done = false;
     this.devs = [];
   }
   assignDev(dev) {
+    dev.getProject();
     this.devs.push(dev);
   }
 
   work() {
-    this.difficulty--; //количество оставшихся дней работы уменьшается
+    this.daysLeft--;
     this.devs.forEach(dev => dev.work());
-    if (!this.difficulty) {
+    if (!this.daysLeft) {
       this.devs.forEach(dev => dev.finishWork());
       this.done = true;
-    } //если дней работы не осталось, проект готов
+    }
   }
   transformForTests() {
     return new QaProject();
@@ -136,7 +133,7 @@ class MobProject extends Project {}
 class QaProject extends Project {
   constructor() {
     super();
-    this.difficulty = 1;
+    this.daysLeft = 1;
   }
 }
 
@@ -175,6 +172,7 @@ class Department {
     return this.devs.filter(dev => dev.free); //массив свободных разработчиков (ресурсы)
   }
   takeProjects(projects) {
+    let freeDevsAmount=this.freeDevs().length;
     let matchingProjects = projects.filter(
       project => project instanceof this.typeOfProjects
     );
@@ -182,14 +180,14 @@ class Department {
       project => !(project instanceof this.typeOfProjects)
     );
     let extraProjects = unmatchingProjects.concat(
-      matchingProjects.slice(this.freeDevs().length)
+      matchingProjects.slice(freeDevsAmount)
     ); //лишние проекты, которые возвратим обратно
     this.needDevs =
-      matchingProjects.length > this.freeDevs().length
-        ? matchingProjects.length - this.freeDevs().length
+      matchingProjects.length > freeDevsAmount
+        ? matchingProjects.length - freeDevsAmount
         : 0;
     this.projects = this.projects.concat(
-      matchingProjects.slice(0, this.freeDevs().length)
+      matchingProjects.slice(0, freeDevsAmount)
     ); //берем проекты, на реализацию которых есть ресурсы
     return extraProjects;
   }
@@ -212,6 +210,9 @@ class Department {
       project.transformForTests()
     );
     return this.projectsToTest;
+  }
+  deleteProjects() {
+    this.projects = this.projects.filter(project => !project.done);
   }
   fire() {
     let candidatesForFire = this.devs.filter(dev => dev.freeDays > 3);
@@ -260,10 +261,10 @@ class MobDepartment extends Department {
         amountOfDevs = amountOfDevsReq;
       }
       while (amountOfDevs) {
-        project.assignDev(freeDevs[0]); //назначаем проекту первого разработчика в массиве свободных
-        freeDevs[0].getProject(); //и у разработчика указываем, что он занят
-        busyDevs.push(freeDevs[0]); //переводим разработчика из массива свободных в массив занятых
-        freeDevs.shift();
+        let firstDev=freeDevs.shift();
+        project.assignDev(firstDev); //назначаем проекту первого разработчика в массиве свободных
+        firstDev.getProject(); //и у разработчика указываем, что он занят
+        busyDevs.push(firstDev); //переводим разработчика из массива свободных в массив занятых
         amountOfDevs--;
       }
     });
