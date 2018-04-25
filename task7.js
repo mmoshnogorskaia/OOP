@@ -18,10 +18,11 @@ class Statistics {
   }
 }
 
-class Company { //BUILDER
+class Company {
+  //BUILDER
   constructor() {
     this.director = null;
-    this.departments = null;  //MULTITON
+    this.departments = null; //MULTITON
     this.statistics = new Statistics();
     this.client = new Client();
   }
@@ -50,20 +51,20 @@ class Company { //BUILDER
   }
 
   workInProcess() {
-    this.departments.forEach(department => {  
+    this.departments.forEach(department => {
       department.assignProjects();
       department.work(); //из всех проектов вычитается 1 день работы
     });
   }
   endDay() {
-    let generalDepartments = this.departments.filter(  
+    let generalDepartments = this.departments.filter(
       department => !(department instanceof QaDepartment)
     );
     generalDepartments.forEach(department =>
       this.director.getProjects(department.sendForTests())
     ); //основные отделы копируют готовые проекты директору для тестирования на следующий день
 
-    let qaDepartment = this.departments.filter(  
+    let qaDepartment = this.departments.filter(
       department => department instanceof QaDepartment
     )[0];
     this.statistics.incProjectsDone(qaDepartment.projectsDone().length);
@@ -72,10 +73,11 @@ class Company { //BUILDER
   }
 }
 
-class Client { //FACTORY
-  constructor() {
-  }
-  createProjects() {  //FACTORY METHOD
+class Client {
+  //FACTORY
+  constructor() {}
+  createProjects() {
+    //FACTORY METHOD
     let projects = [];
     let projectsAmount = getRandomInt(0, 4);
     while (projectsAmount--) {
@@ -107,7 +109,7 @@ class Project {
     this.devs.forEach(dev => dev.work());
     if (!this.daysLeft) {
       this.devs.forEach(dev => dev.finishWork());
-      this.done = true;  
+      this.done = true;
     }
   }
   transformForTests() {
@@ -115,18 +117,19 @@ class Project {
   }
 }
 
-class WebProject extends Project {} //PROTOTYPE
+class WebProject extends Project {}
 
-class MobProject extends Project {} //PROTOTYPE
+class MobProject extends Project {}
 
-class QaProject extends Project {  //PROTOTYPE
+class QaProject extends Project {
   constructor() {
     super();
     this.daysLeft = 1;
   }
 }
 
-class Director {  //MEDIATOR
+class Director {
+  //MEDIATOR
   constructor(name, company) {
     this.name = name;
     this.company = company;
@@ -137,7 +140,8 @@ class Director {  //MEDIATOR
   }
   tryToGiveProjects() {
     let projectsToGive = this.projects;
-    this.projects = this.company.departments.reduce(    //CHAIN OF RESPONSIBILITY
+    this.projects = this.company.departments.reduce(
+      //CHAIN OF RESPONSIBILITY
       (prevDep, currDep) => currDep.takeProjects(prevDep),
       projectsToGive
     );
@@ -150,7 +154,7 @@ class Director {  //MEDIATOR
   }
 }
 
-class Department {  //PROTOTYPE
+class Department {
   constructor() {
     this.projects = [];
     this.projectsToTest = [];
@@ -161,12 +165,12 @@ class Department {  //PROTOTYPE
     return this.devs.filter(dev => dev.free); //массив свободных разработчиков (ресурсы)
   }
   takeProjects(projects) {
-    let freeDevsAmount=this.freeDevs().length;
-    let matchingProjects = projects.filter( 
+    let freeDevsAmount = this.freeDevs().length;
+    let matchingProjects = projects.filter(
       project => project instanceof this.typeOfProjects
     );
     let unmatchingProjects = projects.filter(
-      project => !(project instanceof this.typeOfProjects)  
+      project => !(project instanceof this.typeOfProjects)
     );
     let extraProjects = unmatchingProjects.concat(
       matchingProjects.slice(freeDevsAmount)
@@ -183,7 +187,8 @@ class Department {  //PROTOTYPE
   assignProjects() {
     let freeProjects = this.projects.filter(project => !project.devs.length);
     let freeDevs = this.freeDevs();
-    freeProjects.forEach((project, i) => {  //ITERATOR
+    freeProjects.forEach((project, i) => {
+      //ITERATOR
       project.assignDev(freeDevs[i]);
       freeDevs[i].getProject();
     });
@@ -214,7 +219,8 @@ class Department {  //PROTOTYPE
   }
 }
 
-class WebDepartment extends Department { //PROTOTYPE
+class WebDepartment extends Department {
+  //PROTOTYPE
   constructor() {
     super();
     this.typeOfProjects = WebProject;
@@ -226,7 +232,8 @@ class WebDepartment extends Department { //PROTOTYPE
   }
 }
 
-class MobDepartment extends Department { //PROTOTYPE
+class MobDepartment extends Department {
+  //PROTOTYPE
   constructor() {
     super();
     this.typeOfProjects = MobProject;
@@ -234,31 +241,34 @@ class MobDepartment extends Department { //PROTOTYPE
   hire() {
     while (this.needDevs--) {
       this.devs.push(new MobDev());
+    }
   }
-}
-  assignProjects() {
+  assignProjects() { //STRATEGY
     let freeProjects = this.projects.filter(project => !project.devs);
     let freeDevs = this.freeDevs();
-    let busyDevs = this.devs.filter(dev => !dev.free); //будем помещать сюда тех, кто получил проект
-    let amountOfDevs = 1; //обычно над проектом работает 1 разработчик
-    freeProjects.forEach(project => {  //STRATEGY
-      //выясняем, какому количеству разработчиков можно дать проект
-      let amountOfDevsReq = project.difficulty; //над проектом может работать количество разработчиков=сложности
-      if ((freeDevs.length - this.projects.length) / amountOfDevsReq >= 1) {
-        //если разработчиков много, то даем проект нескольким
-        amountOfDevs = amountOfDevsReq;
-      }
-      while (amountOfDevs--) {  //HIERARCHICAL VISITOR
-        let firstDev=freeDevs.shift();
-        project.assignDev(firstDev); //назначаем проекту первого разработчика в массиве свободных
-        busyDevs.push(firstDev); //переводим разработчика из массива свободных в массив занятых
-      }
-    });
-    this.devs = busyDevs; //перекидываем всех разработчиков обратно в общий массив
+    if (freeProjects.length == freeDevs.length) {
+      super.assignProjects();
+    } else {
+      let busyDevs = this.devs.filter(dev => !dev.free); //будем помещать сюда тех, кто получил проект
+      let amountOfDevs; //выясняем, какому количеству разработчиков можно дать проект
+      freeProjects.forEach(project => {
+        let amountOfDevsReq = project.difficulty; //над проектом может работать количество разработчиков=сложности
+        if ((freeDevs.length - this.projects.length) / amountOfDevsReq > 1) {
+          //если разработчиков много, даем проект нескольким
+          amountOfDevs = amountOfDevsReq;
+        }
+        while (amountOfDevs--) { //VISITOR
+          let firstDev = freeDevs.shift();
+          project.assignDev(firstDev); //назначаем проекту первого разработчика в массиве свободных
+          busyDevs.push(firstDev); //переводим разработчика из массива свободных в массив занятых
+        }
+      });
+      this.devs = busyDevs; //перекидываем всех разработчиков обратно в общий массив
+    }
   }
 }
 
-class QaDepartment extends Department { //PROTOTYPE
+class QaDepartment extends Department {
   constructor() {
     super();
     this.typeOfProjects = QaProject;
@@ -269,14 +279,13 @@ class QaDepartment extends Department { //PROTOTYPE
       this.devs.push(new QaDev());
     }
   }
-  getProjectsDone(){
-    return this.projects.filter( 
-      project => project.done
-    );
+  getProjectsDone() {
+    return this.projects.filter(project => project.done);
   }
 }
 
-class Dev {  //PROTOTYPE
+class Dev {
+  //PROTOTYPE
   constructor() {
     this.free = true;
     this.projectsDone = 0;
@@ -298,27 +307,26 @@ class Dev {  //PROTOTYPE
   }
 }
 
-class WebDev extends Dev {} //PROTOTYPE
-class MobDev extends Dev {} //PROTOTYPE
-class QaDev extends Dev {} //PROTOTYPE
+class WebDev extends Dev {}
+class MobDev extends Dev {}
+class QaDev extends Dev {}
 
-class Simulation {  //FABRIC
+class Simulation { //FABRIC
   constructor(companyName, directorName, departmentsArray) { //INTERPRETER
     this.company = new Company(companyName);
     this.company.addDirector(directorName);
     this.company.addDepartments(departmentsArray);
-    this.statistics=this.company.statistics;
+    this.statistics = this.company.statistics;
   }
   run(days) {
     while (days--) {
       this.company.startDay();
       this.company.workInProcess();
       this.company.endDay();
-      }
-    
+    }
   }
-  showStats(){
-    let allDevs = this.company.departments.reduce(  
+  showStats() {
+    let allDevs = this.company.departments.reduce(
       (previous, current) => previous + current.devs.length,
       0
     );
