@@ -59,16 +59,16 @@ class Company { //BUILDER
     let generalDepartments = this.departments.filter(  
       department => !(department instanceof QaDepartment)
     );
-    generalDepartments.forEach(department =>   //DEPENDENCY INJECTION
+    generalDepartments.forEach(department =>
       this.director.getProjects(department.sendForTests())
     ); //основные отделы копируют готовые проекты директору для тестирования на следующий день
 
     let qaDepartment = this.departments.filter(  
       department => department instanceof QaDepartment
     )[0];
-    this.statistics.incProjectsDone(qaDepartment.projectsDone().length); //DEPENDENCY INJECTION
-    this.departments.forEach(department => department.deleteProjects()); //DEPENDENCY INJECTION
-    this.director.fire();    //DEPENDENCY INJECTION
+    this.statistics.incProjectsDone(qaDepartment.projectsDone().length);
+    this.departments.forEach(department => department.deleteProjects());
+    this.director.fire();
   }
 }
 
@@ -144,10 +144,10 @@ class Director {  //MEDIATOR
     );
   }
   hire() {
-    this.company.departments.forEach(department => department.hire()); //DEPENDENCY INJECTION
+    this.company.departments.forEach(department => department.hire());
   }
   fire() {
-    this.company.departments.forEach(department => department.fire()); //DEPENDENCY INJECTION
+    this.company.departments.forEach(department => department.fire());
   }
 }
 
@@ -159,7 +159,7 @@ class Department {  //PROTOTYPE
     this.devs = []; //OBJECT PULL
   }
   freeDevs() {
-    return this.devs.filter(dev => dev.free); //массив свободных разработчиков (ресурсы) //SPECIFICATION
+    return this.devs.filter(dev => dev.free); //массив свободных разработчиков (ресурсы)
   }
   takeProjects(projects) {
     let freeDevsAmount=this.freeDevs().length;
