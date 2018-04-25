@@ -1,8 +1,8 @@
-function getRandomInt(min, max) {  //SERVANT
+function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max + 1 - min)) + min;
 }
 
-class Statistics { //MEMENTO
+class Statistics {
   constructor() {
     this.hired = 0;
     this.projectsDone = 0;
@@ -11,7 +11,7 @@ class Statistics { //MEMENTO
     this.hired += amount;
   }
   calcFired(currentAmount) {
-    this.fired = this.hired - currentAmount;
+    this.fired = this.hired - currentAmount; //LAZY INITIALIZATION
   }
   incProjectsDone(currentAmount) {
     this.projectsDone += currentAmount;
@@ -38,7 +38,7 @@ class Company { //BUILDER
     this.departments = departmentNames.map(name => new departmentType[name]());
     return this.departments;
   }
-  startDay() {   //FABRIC METHOD
+  startDay() {
     let needToHireToday = this.departments.reduce(
       (previous, current) => previous + current.needDevs,
       0
@@ -49,21 +49,21 @@ class Company { //BUILDER
     this.director.tryToGiveProjects();
   }
 
-  workInProcess() {  //FABRIC METHOD
+  workInProcess() {
     this.departments.forEach(department => {  
       department.assignProjects();
       department.work(); //из всех проектов вычитается 1 день работы
     });
   }
-  endDay() {  //FABRIC METHOD
+  endDay() {
     let generalDepartments = this.departments.filter(  
       department => !(department instanceof QaDepartment)
     );
-    generalDepartments.forEach(department =>   //SPECIFICATION
+    generalDepartments.forEach(department =>   //DEPENDENCY INJECTION
       this.director.getProjects(department.sendForTests())
     ); //основные отделы копируют готовые проекты директору для тестирования на следующий день
 
-    let qaDepartment = this.departments.filter(  //SPECIFICATION
+    let qaDepartment = this.departments.filter(  
       department => department instanceof QaDepartment
     )[0];
     this.statistics.incProjectsDone(qaDepartment.projectsDone().length); //DEPENDENCY INJECTION
@@ -163,10 +163,10 @@ class Department {  //PROTOTYPE
   }
   takeProjects(projects) {
     let freeDevsAmount=this.freeDevs().length;
-    let matchingProjects = projects.filter(  //SPECIFICATION
+    let matchingProjects = projects.filter( 
       project => project instanceof this.typeOfProjects
     );
-    let unmatchingProjects = projects.filter(  //SPECIFICATION
+    let unmatchingProjects = projects.filter(
       project => !(project instanceof this.typeOfProjects)  
     );
     let extraProjects = unmatchingProjects.concat(
@@ -182,7 +182,7 @@ class Department {  //PROTOTYPE
     return extraProjects;
   }
   assignProjects() {
-    let freeProjects = this.projects.filter(project => !project.devs.length); //SPECIFICATION
+    let freeProjects = this.projects.filter(project => !project.devs.length);
     let freeDevs = this.freeDevs();
     freeProjects.forEach((project, i) => {  //ITERATOR
       project.assignDev(freeDevs[i]);
@@ -194,7 +194,7 @@ class Department {  //PROTOTYPE
     this.freeDevs().forEach(dev => dev.beLazy());
   }
   sendForTests() {
-    this.projectsToTest = this.projects.filter(project => project.done); //SPECIFICATION
+    this.projectsToTest = this.projects.filter(project => project.done);
     this.projects = this.projects.filter(project => !project.done); //неготовые проекты остаются
     this.projectsToTest = this.projectsToTest.map(project =>
       project.transformForTests()
@@ -202,10 +202,10 @@ class Department {  //PROTOTYPE
     return this.projectsToTest;
   }
   deleteProjects() {
-    this.projects = this.projects.filter(project => !project.done); //SPECIFICATION
+    this.projects = this.projects.filter(project => !project.done);
   }
   fire() {
-    let candidatesForFire = this.devs.filter(dev => dev.freeDays > 3); //SPECIFICATION
+    let candidatesForFire = this.devs.filter(dev => dev.freeDays > 3);
     this.devs = this.devs.filter(dev => dev.freeDays <= 3); //тех, кто трудился, оставляем
     candidatesForFire.sort(
       (dev1, dev2) => dev1.projectsDone - dev2.projectsDone
@@ -238,9 +238,9 @@ class MobDepartment extends Department { //PROTOTYPE
   }
 }
   assignProjects() {
-    let freeProjects = this.projects.filter(project => !project.devs); //SPECIFICATION
+    let freeProjects = this.projects.filter(project => !project.devs);
     let freeDevs = this.freeDevs();
-    let busyDevs = this.devs.filter(dev => !dev.free); //будем помещать сюда тех, кто получил проект  //SPECIFICATION
+    let busyDevs = this.devs.filter(dev => !dev.free); //будем помещать сюда тех, кто получил проект
     let amountOfDevs = 1; //обычно над проектом работает 1 разработчик
     freeProjects.forEach(project => {  //STRATEGY
       //выясняем, какому количеству разработчиков можно дать проект
@@ -319,7 +319,7 @@ class Simulation {  //FABRIC
     
   }
   showStats(){
-    let allDevs = this.company.departments.reduce(  //LAZY INITIALIZATION
+    let allDevs = this.company.departments.reduce(  
       (previous, current) => previous + current.devs.length,
       0
     );
