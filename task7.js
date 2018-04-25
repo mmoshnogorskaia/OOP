@@ -38,7 +38,7 @@ class Company { //BUILDER
     this.departments = departmentNames.map(name => new departmentType[name]());
     return this.departments;
   }
-  startDay() {
+  startDay() {   //FABRIC METHOD
     let needToHireToday = this.departments.reduce(
       (previous, current) => previous + current.needDevs,
       0
@@ -49,21 +49,21 @@ class Company { //BUILDER
     this.director.tryToGiveProjects();
   }
 
-  workInProcess() {
-    this.departments.forEach(department => {
+  workInProcess() {  //FABRIC METHOD
+    this.departments.forEach(department => {  
       department.assignProjects();
       department.work(); //из всех проектов вычитается 1 день работы
     });
   }
-  endDay() {
-    let generalDepartments = this.departments.filter(
+  endDay() {  //FABRIC METHOD
+    let generalDepartments = this.departments.filter(  
       department => !(department instanceof QaDepartment)
     );
-    generalDepartments.forEach(department =>
+    generalDepartments.forEach(department =>   //SPECIFICATION
       this.director.getProjects(department.sendForTests())
     ); //основные отделы копируют готовые проекты директору для тестирования на следующий день
 
-    let qaDepartment = this.departments.filter(
+    let qaDepartment = this.departments.filter(  //SPECIFICATION
       department => department instanceof QaDepartment
     )[0];
     let projectsDoneToday = qaDepartment.projects.filter(
@@ -79,7 +79,7 @@ class Client { //BUILDER
   constructor() {
     this.projects = []; //OBJECT PULL
   }
-  makeProjects() {
+  makeProjects() {  
     this.projects = [];
     let projectsAmount = getRandomInt(0, 4);
     while (projectsAmount--) {
@@ -147,10 +147,10 @@ class Director {  //MEDIATOR
     );
   }
   hire() {
-    this.company.departments.forEach(department => department.hire());
+    this.company.departments.forEach(department => department.hire()); //DEPENDENCY INJECTION
   }
   fire() {
-    this.company.departments.forEach(department => department.fire());
+    this.company.departments.forEach(department => department.fire()); //DEPENDENCY INJECTION
   }
 }
 
@@ -187,7 +187,7 @@ class Department {  //PROTOTYPE
   assignProjects() {
     let freeProjects = this.projects.filter(project => !project.devs.length); //SPECIFICATION
     let freeDevs = this.freeDevs();
-    freeProjects.forEach((project, i) => {
+    freeProjects.forEach((project, i) => {  //ITERATOR
       project.assignDev(freeDevs[i]);
       freeDevs[i].getProject();
     });
