@@ -66,12 +66,9 @@ class Company { //BUILDER
     let qaDepartment = this.departments.filter(  //SPECIFICATION
       department => department instanceof QaDepartment
     )[0];
-    let projectsDoneToday = qaDepartment.projects.filter(
-      project => project.done
-    );
-    this.statistics.incProjectsDone(projectsDoneToday.length);
-    this.departments.forEach(department => department.deleteProjects());
-    this.director.fire();    
+    this.statistics.incProjectsDone(qaDepartment.projectsDone().length); //DEPENDENCY INJECTION
+    this.departments.forEach(department => department.deleteProjects()); //DEPENDENCY INJECTION
+    this.director.fire();    //DEPENDENCY INJECTION
   }
 }
 
@@ -272,6 +269,11 @@ class QaDepartment extends Department { //PROTOTYPE
       //while
       this.devs.push(new QaDev());
     }
+  }
+  getProjectsDone(){
+    return this.projects.filter( 
+      project => project.done
+    );
   }
 }
 
