@@ -18,7 +18,7 @@ class Statistics {
   }
 }
 
-class Company {
+class Company {  //BUILDER, FACADE
   //BUILDER
   constructor() {
     this.director = null;
@@ -128,8 +128,7 @@ class QaProject extends Project {
   }
 }
 
-class Director {
-  //MEDIATOR
+class Director { //MEDIATOR
   constructor(name, company) {
     this.name = name;
     this.company = company;
@@ -197,7 +196,7 @@ class Department {
     this.projects.forEach(project => project.work());
     this.freeDevs().forEach(dev => dev.beLazy());
   }
-  sendForTests() {
+  sendForTests() { //ADAPTER
     this.projectsToTest = this.projects.filter(project => project.done);
     this.projects = this.projects.filter(project => !project.done); //неготовые проекты остаются
     this.projectsToTest = this.projectsToTest.map(project =>
@@ -220,7 +219,6 @@ class Department {
 }
 
 class WebDepartment extends Department {
-  //PROTOTYPE
   constructor() {
     super();
     this.typeOfProjects = WebProject;
@@ -233,7 +231,6 @@ class WebDepartment extends Department {
 }
 
 class MobDepartment extends Department {
-  //PROTOTYPE
   constructor() {
     super();
     this.typeOfProjects = MobProject;
@@ -243,11 +240,11 @@ class MobDepartment extends Department {
       this.devs.push(new MobDev());
     }
   }
-  assignProjects() { //STRATEGY
+  assignProjects() {
     let freeProjects = this.projects.filter(project => !project.devs);
     let freeDevs = this.freeDevs();
     if (freeProjects.length == freeDevs.length) {
-      super.assignProjects();
+      super();
     } else {
       let busyDevs = this.devs.filter(dev => !dev.free); //будем помещать сюда тех, кто получил проект
       let amountOfDevs; //выясняем, какому количеству разработчиков можно дать проект
@@ -285,7 +282,6 @@ class QaDepartment extends Department {
 }
 
 class Dev {
-  //PROTOTYPE
   constructor() {
     this.free = true;
     this.projectsDone = 0;
@@ -311,8 +307,8 @@ class WebDev extends Dev {}
 class MobDev extends Dev {}
 class QaDev extends Dev {}
 
-class Simulation { //FABRIC
-  constructor(companyName, directorName, departmentsArray) { //INTERPRETER
+class Simulation { //FACTORY
+  constructor(companyName, directorName, departmentsArray) {
     this.company = new Company(companyName);
     this.company.addDirector(directorName);
     this.company.addDepartments(departmentsArray);
@@ -320,7 +316,7 @@ class Simulation { //FABRIC
   }
   run(days) {
     while (days--) {
-      this.company.startDay();
+      this.company.startDay(); //FACADE
       this.company.workInProcess();
       this.company.endDay();
     }
