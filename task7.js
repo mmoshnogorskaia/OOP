@@ -45,7 +45,7 @@ class Company { //BUILDER
     );
     this.statistics.incHired(needToHireToday);
     this.director.hire();
-    this.director.getProjects(this.client.makeProjects());
+    this.director.getProjects(this.client.createProjects());
     this.director.tryToGiveProjects();
   }
 
@@ -72,12 +72,11 @@ class Company { //BUILDER
   }
 }
 
-class Client { //BUILDER
+class Client { //FACTORY
   constructor() {
-    this.projects = []; //OBJECT PULL
   }
-  makeProjects() {  
-    this.projects = [];
+  createProjects() {  //FACTORY METHOD
+    let projects = [];
     let projectsAmount = getRandomInt(0, 4);
     while (projectsAmount--) {
       let projectType = getRandomInt(0, 1);
@@ -87,16 +86,16 @@ class Client { //BUILDER
         this.projects.push(new MobProject(getRandomInt(1, 3)));
       }
     }
-    return this.projects;
+    return projects;
   }
 }
 
-class Project { //PROTOTYPE
+class Project {
   constructor(difficulty) {
     this.difficulty = difficulty;
     this.daysLeft = difficulty; //сложность=количество дней работы над проектом
-    this.done = false;  //STATE
-    this.devs = []; //OBJECT PULL, STATE
+    this.done = false;
+    this.devs = [];
   }
   assignDev(dev) {
     dev.getProject();
@@ -108,7 +107,7 @@ class Project { //PROTOTYPE
     this.devs.forEach(dev => dev.work());
     if (!this.daysLeft) {
       this.devs.forEach(dev => dev.finishWork());
-      this.done = true;
+      this.done = true;  
     }
   }
   transformForTests() {
@@ -131,7 +130,7 @@ class Director {  //MEDIATOR
   constructor(name, company) {
     this.name = name;
     this.company = company;
-    this.projects = []; //OBJECT PULL
+    this.projects = [];
   }
   getProjects(newProjects) {
     this.projects = this.projects.concat(newProjects);
@@ -153,10 +152,10 @@ class Director {  //MEDIATOR
 
 class Department {  //PROTOTYPE
   constructor() {
-    this.projects = []; //OBJECT PULL
-    this.projectsToTest = []; //OBJECT PULL
+    this.projects = [];
+    this.projectsToTest = [];
     this.needDevs = 0;
-    this.devs = []; //OBJECT PULL
+    this.devs = [];
   }
   freeDevs() {
     return this.devs.filter(dev => dev.free); //массив свободных разработчиков (ресурсы)
@@ -279,9 +278,9 @@ class QaDepartment extends Department { //PROTOTYPE
 
 class Dev {  //PROTOTYPE
   constructor() {
-    this.free = true; //STATE
-    this.projectsDone = 0; //STATE
-    this.freeDays = 0; //STATE
+    this.free = true;
+    this.projectsDone = 0;
+    this.freeDays = 0;
   }
   getProject() {
     this.freeDays = 0;
