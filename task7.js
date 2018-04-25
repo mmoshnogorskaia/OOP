@@ -19,7 +19,6 @@ class Statistics {
 }
 
 class Company {  //BUILDER, FACADE
-  //BUILDER
   constructor() {
     this.director = null;
     this.departments = null; //MULTITON
