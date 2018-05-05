@@ -53,19 +53,22 @@ class QaProject extends Project {
 }
 
 class Client {
+  constructor() {
+    this.projects = [];
+  }
   createProjects() {
-    const projects = [];
+    this.projects = [];
     let projectsAmount = getRandomInt(0, 4);
     while (projectsAmount) {
       const projectType = getRandomInt(0, 1);
       if (projectType) {
-        projects.push(new WebProject(getRandomInt(1, 3)));
+        this.projects.push(new WebProject(getRandomInt(1, 3)));
       } else {
-        projects.push(new MobProject(getRandomInt(1, 3)));
+        this.projects.push(new MobProject(getRandomInt(1, 3)));
       }
       projectsAmount -= 1;
     }
-    return projects;
+    return this.projects;
   }
 }
 
@@ -161,7 +164,7 @@ class Department {
   sendForTests() { // ADAPTER
     this.projectsToTest = this.projects.filter(project => project.done);
     this.projects = this.projects.filter(project => !project.done); // неготовые проекты остаются
-    this.projectsToTest = this.projectsToTest.map(project => project = new QaProject());
+    this.projectsToTest = this.projectsToTest.map(() => new QaProject());
     return this.projectsToTest;
   }
   deleteProjects() {
