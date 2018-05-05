@@ -1,6 +1,7 @@
-function getRandomInt(min, max) {
+const rand = function getRandomIntFromRange(min, max) {
   return Math.floor(Math.random() * ((max + 1) - min)) + min;
-}
+};
+
 class Statistics {
   constructor() {
     this.hired = 0;
@@ -8,9 +9,10 @@ class Statistics {
   }
   incHired(amount) {
     this.hired += amount;
+    return this.hired;
   }
   calcFired(currentAmount) {
-    this.fired = this.hired - currentAmount; // LAZY INITIALIZATION
+    this.fired = this.hired - currentAmount;
     return this.fired;
   }
   incProjectsDone(currentAmount) {
@@ -22,22 +24,26 @@ class Statistics {
 class Project {
   constructor(difficulty) {
     this.difficulty = difficulty;
-    this.daysLeft = difficulty; // сложность=количество дней работы над проектом
+
+    // сложность=количество дней работы над проектом
+    this.daysLeft = difficulty;
     this.done = false;
     this.devs = [];
   }
   assignDev(dev) {
     dev.getProject();
     this.devs.push(dev);
+    return this;
   }
 
   work() {
     this.daysLeft -= 1;
     this.devs.forEach(dev => dev.work());
-    if (!this.daysLeft) {
+    if (this.daysLeft === 0) {
       this.devs.forEach(dev => dev.finishWork());
       this.done = true;
     }
+    return this;
   }
 }
 
@@ -58,13 +64,13 @@ class Client {
   }
   createProjects() {
     this.projects = [];
-    let projectsAmount = getRandomInt(0, 4);
-    while (projectsAmount) {
-      const projectType = getRandomInt(0, 1);
-      if (projectType) {
-        this.projects.push(new WebProject(getRandomInt(1, 3)));
+    let projectsAmount = rand(0, 4);
+    while (projectsAmount > 0) {
+      const projectType = rand(0, 1);
+      if (projectType === 0) {
+        this.projects.push(new WebProject(rand(1, 3)));
       } else {
-        this.projects.push(new MobProject(getRandomInt(1, 3)));
+        this.projects.push(new MobProject(rand(1, 3)));
       }
       projectsAmount -= 1;
     }
@@ -72,7 +78,7 @@ class Client {
   }
 }
 
-class Director { // MEDIATOR
+class Director {
   constructor(name, company) {
     this.name = name;
     this.company = company;
@@ -80,20 +86,23 @@ class Director { // MEDIATOR
   }
   getProjects(newProjects) {
     this.projects = this.projects.concat(newProjects);
+    return this.projects;
   }
   tryToGiveProjects() {
     const projectsToGive = this.projects;
     this.projects = this.company.departments.reduce(
-      // CHAIN OF RESPONSIBILITY
       (prevDep, currDep) => currDep.takeProjects(prevDep),
       projectsToGive,
     );
+    return this;
   }
   hire() {
     this.company.departments.forEach(department => department.hire());
+    return this;
   }
   fire() {
     this.company.departments.forEach(department => department.fire());
+    return this;
   }
 }
 
@@ -106,16 +115,20 @@ class Dev {
   getProject() {
     this.freeDays = 0;
     this.free = false;
+    return this;
   }
   work() {
     this.freeDays = 0;
+    return this;
   }
   finishWork() {
     this.projectsDone += 1;
     this.free = true;
+    return this;
   }
   beLazy() {
     this.freeDays += 1;
+    return this;
   }
 }
 
@@ -131,53 +144,68 @@ class Department {
     this.devs = [];
   }
   freeDevs() {
-    return this.devs.filter(dev => dev.free); // массив свободных разработчиков (ресурсы)
+    // массив свободных разработчиков (ресурсы)
+    return this.devs.filter(dev => dev.free);
   }
   takeProjects(projects) {
     const freeDevsAmount = this.freeDevs().length;
     const matchingProjects = projects.filter(project => project instanceof this.typeOfProjects);
     const unmatchingProjects = projects.filter(project =>
       !(project instanceof this.typeOfProjects));
+
+    // лишние проекты, которые возвратим обратно
     const extraProjects = unmatchingProjects
-      .concat(matchingProjects.slice(freeDevsAmount)); // лишние проекты, которые возвратим обратно
+      .concat(matchingProjects.slice(freeDevsAmount));
     this.needDevs =
       matchingProjects.length > freeDevsAmount
         ? matchingProjects.length - freeDevsAmount
         : 0;
+
+    // берем проекты, на реализацию которых есть ресурсы
     this.projects = this.projects
       .concat(matchingProjects.slice(0, freeDevsAmount));
-    // берем проекты, на реализацию которых есть ресурсы
     return extraProjects;
   }
   assignProjects() {
     const freeProjects = this.projects.filter(project => !project.devs.length);
     const freeDevs = this.freeDevs();
     freeProjects.forEach((project, i) => {
-      // ITERATOR
       project.assignDev(freeDevs[i]);
     });
+    return this;
   }
   work() {
     this.projects.forEach(project => project.work());
     this.freeDevs().forEach(dev => dev.beLazy());
+    return this;
   }
-  sendForTests() { // ADAPTER
+  sendForTests() {
     this.projectsToTest = this.projects.filter(project => project.done);
-    this.projects = this.projects.filter(project => !project.done); // неготовые проекты остаются
+
+    // неготовые проекты остаются
+    this.projects = this.projects.filter(project => !project.done);
     this.projectsToTest = this.projectsToTest.map(() => new QaProject());
     return this.projectsToTest;
   }
   deleteProjects() {
     this.projects = this.projects.filter(project => !project.done);
+    return this.projects;
   }
   fire() {
     const candidatesForFire = this.devs.filter(dev => dev.freeDays > 3);
-    this.devs = this.devs.filter(dev => dev.freeDays <= 3); // тех, кто трудился, оставляем
+
+    // тех, кто трудился, оставляем
+    this.devs = this.devs.filter(dev => dev.freeDays <= 3);
+
     // сортируем кандидатов на увольнение по возрастанию количества выполненных проектов
     candidatesForFire.sort((dev1, dev2) => dev1.projectsDone - dev2.projectsDone);
-    candidatesForFire.shift(); // удаляем первого (у него выполнено проектов меньше всех)
+
+    // удаляем первого (у него выполнено проектов меньше всех)
+    candidatesForFire.shift();
+
     // объединяем массив обратно, но уже без уволенного разработчика
     this.devs = this.devs.concat(candidatesForFire);
+    return this.devs;
   }
 }
 
@@ -190,6 +218,7 @@ class WebDepartment extends Department {
     for (let i = 0; i < this.needDevs; i += 1) {
       this.devs.push(new WebDev());
     }
+    return this.devs;
   }
 }
 
@@ -199,10 +228,11 @@ class MobDepartment extends Department {
     this.typeOfProjects = MobProject;
   }
   hire() {
-    while (this.needDevs) {
+    while (this.needDevs > 0) {
       this.devs.push(new MobDev());
       this.needDevs -= 1;
     }
+    return this.devs;
   }
   assignProjects() {
     const freeProjects = this.projects.filter(project => !project.devs.length);
@@ -212,7 +242,9 @@ class MobDepartment extends Department {
     } else {
       // будем помещать сюда тех, кто получил проект
       const busyDevs = this.devs.filter(dev => !dev.free);
-      let amountOfDevs; // выясняем, какому количеству разработчиков можно дать проект
+
+      // выясняем, какому количеству разработчиков можно дать проект
+      let amountOfDevs;
       freeProjects.forEach((project) => {
         // над проектом может работать количество разработчиков=сложности
         const amountOfDevsReq = project.difficulty;
@@ -220,15 +252,22 @@ class MobDepartment extends Department {
           // если разработчиков много, даем проект нескольким
           amountOfDevs = amountOfDevsReq;
         }
-        while (amountOfDevs) { // VISITOR
+        while (amountOfDevs > 0) { // VISITOR
           const firstDev = freeDevs.shift();
-          project.assignDev(firstDev); // назначаем проекту первого разработчика в массиве свободных
-          busyDevs.push(firstDev); // переводим разработчика из массива свободных в массив занятых
+
+          // назначаем проекту первого разработчика в массиве свободных
+          project.assignDev(firstDev);
+
+          // переводим разработчика из массива свободных в массив занятых
+          busyDevs.push(firstDev);
           amountOfDevs -= 1;
         }
       });
-      this.devs = busyDevs; // перекидываем всех разработчиков обратно в общий массив
+
+      // перекидываем всех разработчиков обратно в общий массив
+      this.devs = busyDevs;
     }
+    return this;
   }
 }
 
@@ -238,20 +277,21 @@ class QaDepartment extends Department {
     this.typeOfProjects = QaProject;
   }
   hire() {
-    for (let i = 0; i < this.needDevs; i += 1) {
-      // while
+    while (this.needDevs > 0) {
       this.devs.push(new QaDev());
+      this.needDevs -= 1;
     }
+    return this.devs;
   }
   getProjectsDone() {
     return this.projects.filter(project => project.done);
   }
 }
 
-class Company { // BUILDER, FACADE
+class Company {
   constructor() {
     this.director = null;
-    this.departments = null; // MULTITON
+    this.departments = null;
     this.statistics = new Statistics();
     this.client = new Client();
   }
@@ -282,13 +322,16 @@ class Company { // BUILDER, FACADE
   workInProcess() {
     this.departments.forEach((department) => {
       department.assignProjects();
-      department.work(); // из всех проектов вычитается 1 день работы
+
+      // из всех проектов вычитается 1 день работы
+      department.work();
     });
   }
   endDay() {
     const generalDepartments = this.departments.filter(department =>
       !(department instanceof QaDepartment));
-      // основные отделы копируют готовые проекты директору для тестирования на следующий день
+
+    // основные отделы копируют готовые проекты директору для тестирования на следующий день
     generalDepartments.forEach(department =>
       this.director.getProjects(department.sendForTests()));
 
@@ -297,10 +340,11 @@ class Company { // BUILDER, FACADE
     this.statistics.incProjectsDone(qaDepartment.getProjectsDone().length);
     this.departments.forEach(department => department.deleteProjects());
     this.director.fire();
+    return this;
   }
 }
 
-class Simulation { // FACTORY
+class Simulation {
   constructor(companyName, directorName, departmentsArray) {
     this.company = new Company(companyName);
     this.company.addDirector(directorName);
@@ -309,12 +353,13 @@ class Simulation { // FACTORY
   }
   run(days) {
     let daysAmount = days;
-    while (daysAmount) {
-      this.company.startDay(); // FACADE
+    while (daysAmount > 0) {
+      this.company.startDay();
       this.company.workInProcess();
       this.company.endDay();
       daysAmount -= 1;
     }
+    return this;
   }
   showStats() {
     const allDevs = this.company.departments.reduce(
@@ -334,7 +379,10 @@ const simulation = new Simulation('creativeGuys', 'vasiliy', [
   'mob',
   'qa',
 ]);
-/* На вход подается количество дней.
-На выходе подробная статистика */
-simulation.run(100); // FACADE
+
+/*
+* На вход подается количество дней.
+* На выходе подробная статистика
+*/
+simulation.run(100);
 console.log(simulation.showStats());
