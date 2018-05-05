@@ -1,0 +1,33 @@
+{
+  "name": "task7",
+  "version": "1.0.0",
+  "description": "linter",
+  "main": "task7.js",
+  "dependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.11.0",
+    "restore-cursor": "^2.0.0",
+    "run-async": "^2.3.0",
+    "rx-lite": "^4.0.8",
+    "rx-lite-aggregates": "^4.0.8",
+    "type-check": "^0.3.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Moshnogorskaya/Task7.git"
+  },
+  "keywords": [
+    "linter"
+  ],
+  "author": "Moshnogorskaya",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Moshnogorskaya/Task7/issues"
+  },
+  "homepage": "https://github.com/Moshnogorskaya/Task7#readme"
+}
