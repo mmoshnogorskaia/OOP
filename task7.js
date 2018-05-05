@@ -52,7 +52,6 @@ class QaProject extends Project {
   }
 }
 
-
 class Client {
   createProjects() {
     const projects = [];
