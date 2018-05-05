@@ -1,0 +1,26 @@
+{
+  "name": "task7",
+  "version": "1.0.0",
+  "description": "",
+  "main": "task7.js",
+  "dependencies": {
+    "eslint": "^4.19.1"
+  },
+  "devDependencies": {
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.11.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Moshnogorskaya/Task7.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Moshnogorskaya/Task7/issues"
+  },
+  "homepage": "https://github.com/Moshnogorskaya/Task7#readme"
+}
