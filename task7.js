@@ -63,7 +63,7 @@ class Client {
     this.projects = [];
   }
   createProjects() {
-    this.projects = [];
+    this.projects.length = 0;
     let projectsAmount = rand(0, 4);
     while (projectsAmount > 0) {
       const projectType = rand(0, 1);
