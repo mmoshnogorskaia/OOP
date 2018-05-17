@@ -3,6 +3,9 @@ const rand = function getRandomIntFromRange(min, max) {
 };
 
 class Statistics {
+  projectsDone: number;
+  fired: number;
+  hired: number;
   constructor() {
     this.hired = 0;
     this.projectsDone = 0;
@@ -22,6 +25,10 @@ class Statistics {
 }
 
 class Project {
+  difficulty: number;
+  daysLeft: number;
+  done: boolean;
+  devs: Array<Dev>;
   constructor(difficulty) {
     this.difficulty = difficulty;
 
@@ -52,13 +59,14 @@ class WebProject extends Project {}
 class MobProject extends Project {}
 
 class QaProject extends Project {
-  constructor() {
-    super();
-    this.daysLeft = 1;
+  constructor(difficulty) {
+    super(difficulty);
+    this.daysLeft = difficulty;
   }
 }
 
 class Client {
+  projects: Array<Project>;
   constructor() {
     this.projects = [];
   }
@@ -79,6 +87,9 @@ class Client {
 }
 
 class Director {
+  projects: Array<Project>;
+  name: string;
+  company: Company;
   constructor(name, company) {
     this.name = name;
     this.company = company;
@@ -107,6 +118,9 @@ class Director {
 }
 
 class Dev {
+  projectsDone: number;
+  free: boolean;
+  freeDays: number;
   constructor() {
     this.free = true;
     this.projectsDone = 0;
@@ -137,6 +151,11 @@ class MobDev extends Dev {}
 class QaDev extends Dev {}
 
 class Department {
+  projects: Array<Project>;
+  devs: Array<Dev>;
+  projectsToTest: Array<Project>;
+  needDevs: number;
+  typeOfProjects: any;
   constructor() {
     this.projects = [];
     this.projectsToTest = [];
@@ -184,7 +203,7 @@ class Department {
 
     // неготовые проекты остаются
     this.projects = this.projects.filter(project => !project.done);
-    this.projectsToTest = this.projectsToTest.map(() => new QaProject());
+    this.projectsToTest = this.projectsToTest.map(() => new QaProject(1));
     return this.projectsToTest;
   }
   deleteProjects() {
@@ -225,7 +244,7 @@ class WebDepartment extends Department {
 class MobDepartment extends Department {
   constructor() {
     super();
-    this.typeOfProjects = MobProject;
+    this.typeOfProjects = 'MobProject';
   }
   hire() {
     while (this.needDevs > 0) {
@@ -289,7 +308,13 @@ class QaDepartment extends Department {
 }
 
 class Company {
-  constructor() {
+  name: string;
+  director: Director;
+  departments: Array<Department>;
+  statistics: Statistics;
+  client: Client;
+  constructor(name) {
+    this.name = name;
     this.director = null;
     this.departments = null;
     this.statistics = new Statistics();
@@ -345,6 +370,8 @@ class Company {
 }
 
 class Simulation {
+  company: Company;
+  statistics: any;
   constructor(companyName, directorName, departmentsArray) {
     this.company = new Company(companyName);
     this.company.addDirector(directorName);
