@@ -1,43 +1,39 @@
-const rand = function getRandomIntFromRange(min, max) {
+const rand = function getRandomIntFromRange(min: number, max: number) {
   return Math.floor(Math.random() * ((max + 1) - min)) + min;
 };
 
 class Statistics {
-  projectsDone: number;
-  fired: number;
-  hired: number;
+  public projectsDone: number;
+  public hired: number;
   constructor() {
     this.hired = 0;
     this.projectsDone = 0;
   }
-  incHired(amount) {
+  incHired(amount: number) {
     this.hired += amount;
     return this.hired;
   }
-  calcFired(currentAmount) {
-    this.fired = this.hired - currentAmount;
-    return this.fired;
+  calcFired(currentAmount: number) {
+    let fired = this.hired - currentAmount;
+    return fired;
   }
-  incProjectsDone(currentAmount) {
+  incProjectsDone(currentAmount: number) {
     this.projectsDone += currentAmount;
     return this.projectsDone;
   }
 }
 
-class Project {
-  difficulty: number;
+abstract class Project {
   daysLeft: number;
   done: boolean;
-  devs: Array<Dev>;
-  constructor(difficulty) {
-    this.difficulty = difficulty;
-
+  readonly devs: Array<Dev>;
+  constructor(readonly difficulty: number) {
     // сложность=количество дней работы над проектом
     this.daysLeft = difficulty;
     this.done = false;
     this.devs = [];
   }
-  assignDev(dev) {
+  assignDev(dev: Dev) {
     dev.getProject();
     this.devs.push(dev);
     return this;
@@ -45,9 +41,9 @@ class Project {
 
   work() {
     this.daysLeft -= 1;
-    this.devs.forEach(dev => dev.work());
+    this.devs.forEach((dev: Dev) => dev.work());
     if (this.daysLeft === 0) {
-      this.devs.forEach(dev => dev.finishWork());
+      this.devs.forEach((dev: Dev) => dev.finishWork());
       this.done = true;
     }
     return this;
@@ -55,18 +51,11 @@ class Project {
 }
 
 class WebProject extends Project {}
-
 class MobProject extends Project {}
-
-class QaProject extends Project {
-  constructor(difficulty) {
-    super(difficulty);
-    this.daysLeft = difficulty;
-  }
-}
+class QaProject extends Project {}
 
 class Client {
-  projects: Array<Project>;
+  public projects: Array<Project>;
   constructor() {
     this.projects = [];
   }
@@ -87,40 +76,36 @@ class Client {
 }
 
 class Director {
-  projects: Array<Project>;
-  name: string;
-  company: Company;
-  constructor(name, company) {
-    this.name = name;
-    this.company = company;
+  private projects: Array<Project>;
+  constructor(private readonly name: string, private readonly company: Company) {
     this.projects = [];
   }
-  getProjects(newProjects) {
+  getProjects(newProjects: Array<Project>) {
     this.projects = this.projects.concat(newProjects);
     return this.projects;
   }
   tryToGiveProjects() {
     const projectsToGive = this.projects;
     this.projects = this.company.departments.reduce(
-      (prevDep, currDep) => currDep.takeProjects(prevDep),
+      (prevDep: Array<Project>, currDep: departmentConfig) => currDep.takeProjects(prevDep),
       projectsToGive,
     );
     return this;
   }
   hire() {
-    this.company.departments.forEach(department => department.hire());
+    this.company.departments.forEach((department: departmentConfig) => department.hire());
     return this;
   }
   fire() {
-    this.company.departments.forEach(department => department.fire());
+    this.company.departments.forEach((department: departmentConfig) => department.fire());
     return this;
   }
 }
 
-class Dev {
-  projectsDone: number;
-  free: boolean;
-  freeDays: number;
+abstract class Dev {
+  public projectsDone: number;
+  public free: boolean;
+  public freeDays: number;
   constructor() {
     this.free = true;
     this.projectsDone = 0;
@@ -150,12 +135,12 @@ class WebDev extends Dev {}
 class MobDev extends Dev {}
 class QaDev extends Dev {}
 
-class Department {
-  projects: Array<Project>;
-  devs: Array<Dev>;
-  projectsToTest: Array<Project>;
-  needDevs: number;
-  typeOfProjects: any;
+abstract class Department {
+  public typeOfProjects: typeof Project;
+  protected projects: Array<Project>;
+  public devs: Array<Dev>;
+  protected projectsToTest: Array<Project>;
+  public needDevs: number;
   constructor() {
     this.projects = [];
     this.projectsToTest = [];
@@ -166,10 +151,10 @@ class Department {
     // массив свободных разработчиков (ресурсы)
     return this.devs.filter(dev => dev.free);
   }
-  takeProjects(projects) {
+  takeProjects(projects: Array<Project>) {
     const freeDevsAmount = this.freeDevs().length;
-    const matchingProjects = projects.filter(project => project instanceof this.typeOfProjects);
-    const unmatchingProjects = projects.filter(project =>
+    const matchingProjects = projects.filter((project: Project) => project instanceof this.typeOfProjects);
+    const unmatchingProjects = projects.filter((project: Project) =>
       !(project instanceof this.typeOfProjects));
 
     // лишние проекты, которые возвратим обратно
@@ -186,38 +171,38 @@ class Department {
     return extraProjects;
   }
   assignProjects() {
-    const freeProjects = this.projects.filter(project => !project.devs.length);
+    const freeProjects = this.projects.filter((project: Project) => !project.devs.length);
     const freeDevs = this.freeDevs();
-    freeProjects.forEach((project, i) => {
+    freeProjects.forEach((project: Project, i: number) => {
       project.assignDev(freeDevs[i]);
     });
     return this;
   }
   work() {
-    this.projects.forEach(project => project.work());
-    this.freeDevs().forEach(dev => dev.beLazy());
+    this.projects.forEach((project: Project) => project.work());
+    this.freeDevs().forEach((dev: Dev) => dev.beLazy());
     return this;
   }
   sendForTests() {
-    this.projectsToTest = this.projects.filter(project => project.done);
+    this.projectsToTest = this.projects.filter((project: Project) => project.done);
 
     // неготовые проекты остаются
-    this.projects = this.projects.filter(project => !project.done);
+    this.projects = this.projects.filter((project: Project) => !project.done);
     this.projectsToTest = this.projectsToTest.map(() => new QaProject(1));
     return this.projectsToTest;
   }
   deleteProjects() {
-    this.projects = this.projects.filter(project => !project.done);
+    this.projects = this.projects.filter((project: Project) => !project.done);
     return this.projects;
   }
   fire() {
-    const candidatesForFire = this.devs.filter(dev => dev.freeDays > 3);
+    const candidatesForFire = this.devs.filter((dev: Dev) => dev.freeDays > 3);
 
     // тех, кто трудился, оставляем
-    this.devs = this.devs.filter(dev => dev.freeDays <= 3);
+    this.devs = this.devs.filter((dev: Dev) => dev.freeDays <= 3);
 
     // сортируем кандидатов на увольнение по возрастанию количества выполненных проектов
-    candidatesForFire.sort((dev1, dev2) => dev1.projectsDone - dev2.projectsDone);
+    candidatesForFire.sort((dev1: Dev, dev2: Dev) => dev1.projectsDone - dev2.projectsDone);
 
     // удаляем первого (у него выполнено проектов меньше всех)
     candidatesForFire.shift();
@@ -244,7 +229,7 @@ class WebDepartment extends Department {
 class MobDepartment extends Department {
   constructor() {
     super();
-    this.typeOfProjects = 'MobProject';
+    this.typeOfProjects = MobProject;
   }
   hire() {
     while (this.needDevs > 0) {
@@ -254,17 +239,17 @@ class MobDepartment extends Department {
     return this.devs;
   }
   assignProjects() {
-    const freeProjects = this.projects.filter(project => !project.devs.length);
+    const freeProjects = this.projects.filter((project: MobProject) => !project.devs.length);
     const freeDevs = this.freeDevs();
     if (freeProjects.length === freeDevs.length) {
       super.assignProjects();
     } else {
       // будем помещать сюда тех, кто получил проект
-      const busyDevs = this.devs.filter(dev => !dev.free);
+      const busyDevs = this.devs.filter((dev: MobDev) => !dev.free);
 
       // выясняем, какому количеству разработчиков можно дать проект
       let amountOfDevs;
-      freeProjects.forEach((project) => {
+      freeProjects.forEach((project: MobProject) => {
         // над проектом может работать количество разработчиков=сложности
         const amountOfDevsReq = project.difficulty;
         if ((freeDevs.length - this.projects.length) / amountOfDevsReq > 1) {
@@ -303,39 +288,42 @@ class QaDepartment extends Department {
     return this.devs;
   }
   getProjectsDone() {
-    return this.projects.filter(project => project.done);
+    return this.projects.filter((project: QaProject) => project.done);
   }
 }
 
+interface departmentConfig extends Department{
+  hire(): Array<Dev>;
+  getProjectsDone(): Array<Project>;
+}
+
 class Company {
-  name: string;
-  director: Director;
-  departments: Array<Department>;
-  statistics: Statistics;
-  client: Client;
-  constructor(name) {
-    this.name = name;
+  public director: Director;
+  public departments: Array<departmentConfig>;
+  public readonly statistics: Statistics;
+  public readonly client: Client;
+  constructor(readonly name: string) {
     this.director = null;
     this.departments = null;
     this.statistics = new Statistics();
     this.client = new Client();
   }
-  addDirector(name = '') {
+  addDirector(name :string = '') {
     this.director = new Director(name, this);
     return this.director;
   }
-  addDepartments(departmentNames) {
+  addDepartments(departmentNames: Array<string>) {
     const departmentType = {
       web: WebDepartment,
       mob: MobDepartment,
       qa: QaDepartment,
     };
-    this.departments = departmentNames.map(name => new departmentType[name]());
+    this.departments = departmentNames.map((name: string) => new departmentType[name]());
     return this.departments;
   }
   startDay() {
     const needToHireToday = this.departments.reduce(
-      (previous, current) => previous + current.needDevs,
+      (previous: number, current: departmentConfig) => previous + current.needDevs,
       0,
     );
     this.statistics.incHired(needToHireToday);
@@ -345,7 +333,7 @@ class Company {
   }
 
   workInProcess() {
-    this.departments.forEach((department) => {
+    this.departments.forEach((department: departmentConfig) => {
       department.assignProjects();
 
       // из всех проектов вычитается 1 день работы
@@ -353,32 +341,32 @@ class Company {
     });
   }
   endDay() {
-    const generalDepartments = this.departments.filter(department =>
+    const generalDepartments = this.departments.filter((department: departmentConfig) =>
       !(department instanceof QaDepartment));
 
     // основные отделы копируют готовые проекты директору для тестирования на следующий день
-    generalDepartments.forEach(department =>
+    generalDepartments.forEach((department: departmentConfig) =>
       this.director.getProjects(department.sendForTests()));
 
-    const qaDepartment = this.departments.filter(department =>
+    const qaDepartment = this.departments.filter((department: departmentConfig) =>
       department instanceof QaDepartment)[0];
     this.statistics.incProjectsDone(qaDepartment.getProjectsDone().length);
-    this.departments.forEach(department => department.deleteProjects());
+    this.departments.forEach((department: departmentConfig) => department.deleteProjects());
     this.director.fire();
     return this;
   }
 }
 
 class Simulation {
-  company: Company;
-  statistics: any;
-  constructor(companyName, directorName, departmentsArray) {
+  private company: Company;
+  private statistics: Statistics;
+  constructor(companyName: string, directorName: string, departmentsArray: Array<string>) {
     this.company = new Company(companyName);
     this.company.addDirector(directorName);
     this.company.addDepartments(departmentsArray);
     this.statistics = this.company.statistics;
   }
-  run(days) {
+  run(days: number) {
     let daysAmount = days;
     while (daysAmount > 0) {
       this.company.startDay();
@@ -390,7 +378,7 @@ class Simulation {
   }
   showStats() {
     const allDevs = this.company.departments.reduce(
-      (previous, current) => previous + current.devs.length,
+      (previous: number, current: departmentConfig) => previous + current.devs.length,
       0,
     );
     return {
